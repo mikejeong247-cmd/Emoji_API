@@ -1,4 +1,11 @@
-// 단순화된 이모지 피커
+// Google Sheets에서 데이터 로드
+  async function loadEmojis() {
+    try {
+      grid.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; padding: 2rem;">이모지를 불러오는 중...</div>';
+      
+      // Google Sheets에서 데이터 로드 시도
+      try {
+        const response = await fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vTc7jzLftQBL-UUnwIHYR4yXHLp-fX3OKB0cE8l9tWKjCAr_Y_IpzO6P_aAbp6MZ_s2Qt26PC_71CVX/pub?gid=840// 단순화된 이모지 피커
 document.addEventListener('DOMContentLoaded', async () => {
   const grid = document.getElementById('grid');
   const moreButton = document.getElementById('more');
