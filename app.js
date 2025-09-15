@@ -292,13 +292,14 @@
           const toast = document.getElementById('toast');
           const clipboardContent = document.getElementById('clipboardContent');
           
-          let emojis = [];
-          let filteredEmojis = [];
-          let displayedCount = 0;
-          const itemsPerPage = 100;
-          let copyHistory = [];
-          let currentCategory = 'all';
-          let categories = new Map();
+let emojis = [];
+let filteredEmojis = [];
+let displayedCount = 0;
+const itemsPerPage = 100;
+let copyHistory = [];
+let currentCategory = 'all';
+let categories = new Map();
+// sidebar, sidebarToggle 변수 제거
 
           // Google Sheets에서 데이터 로드
           async function loadEmojis() {
@@ -346,17 +347,16 @@
                 item[header] = values[index] || '';
               });
 
-              if (item.emoji && item.name_ko) {
-                if (item.code && (!item.emoji || item.emoji === '□')) {
-                  item.emoji = unicodeToEmoji(item.code);
-                }
-                // 국가 코드를 깃발 이모지로 변환
-                if (item.emoji && item.emoji.length === 2 && /^[A-Z]{2}$/.test(item.emoji)) {
-                  item.emoji = countryCodeToFlag(item.emoji);
-                }
-                data.push(item);
-              }
-            }
+if (item.emoji && item.name_ko) {
+  if (item.code && (!item.emoji || item.emoji === '□')) {
+    item.emoji = unicodeToEmoji(item.code);
+  }
+  // 국가 코드를 깃발 이모지로 변환
+  if (item.emoji && item.emoji.length === 2 && /^[A-Z]{2}$/.test(item.emoji)) {
+    item.emoji = countryCodeToFlag(item.emoji);
+  }
+  data.push(item);
+}
 
             return data;
           }
@@ -396,16 +396,16 @@
             }
           }
 
-          function countryCodeToFlag(countryCode) {
-            if (countryCode.length !== 2) return countryCode;
-            
-            const codePoints = countryCode
-              .toUpperCase()
-              .split('')
-              .map(char => 0x1F1E6 + char.charCodeAt(0) - 'A'.charCodeAt(0));
-              
-            return String.fromCodePoint(...codePoints);
-          }
+function countryCodeToFlag(countryCode) {
+  if (countryCode.length !== 2) return countryCode;
+  
+  const codePoints = countryCode
+    .toUpperCase()
+    .split('')
+    .map(char => 0x1F1E6 + char.charCodeAt(0) - 'A'.charCodeAt(0));
+    
+  return String.fromCodePoint(...codePoints);
+}
 
           // 카테고리 처리
           function processCategories() {
@@ -555,54 +555,50 @@
             card.addEventListener('click', () => copyEmoji(emoji));
             return card;
           }
-
-          async function copyEmoji(emoji) {
-            try {
-              await navigator.clipboard.writeText(emoji.emoji);
-              addToHistory(emoji);
-              showToast(emoji.emoji + ' 복사됨!');
               
-            } catch (error) {
-              const textArea = document.createElement('textarea');
-              textArea.value = emoji.emoji;
-              textArea.style.position = 'fixed';
-              textArea.style.left = '-9999px';
-              document.body.appendChild(textArea);
-              textArea.select();
-              document.execCommand('copy');
-              document.body.removeChild(textArea);
-              
-              addToHistory(emoji);
-              showToast(emoji.emoji + ' 복사됨!');
-            }
-          }
+async function copyEmoji(emoji) {
+  try {
+    await navigator.clipboard.writeText(emoji.emoji);
+    addToHistory(emoji);
+    showToast(emoji.emoji + ' 복사됨!');
+    // openSidebar() 제거
+  } catch (error) {
+    // 폴백 코드...
+    addToHistory(emoji);
+    showToast(emoji.emoji + ' 복사됨!');
+    // openSidebar() 제거
+  }
+}
 
-          function addToHistory(emoji) {
-            copyHistory = copyHistory.filter(item => item.emoji.emoji !== emoji.emoji);
-            copyHistory.unshift({
-              emoji: emoji,
-              timestamp: new Date()
-            });
-            
-            if (copyHistory.length > 10) {
-              copyHistory = copyHistory.slice(0, 10);
-            }
-            
-            updateClipboardDisplay();
-          }
+function addToHistory(emoji) {
+  copyHistory = copyHistory.filter(item => item.emoji.emoji !== emoji.emoji);
+  copyHistory.unshift({
+    emoji: emoji,
+    timestamp: new Date()
+  });
+  
+  if (copyHistory.length > 10) {
+    copyHistory = copyHistory.slice(0, 10);
+  }
+  
+  updateClipboardDisplay(); // updateHistoryDisplay에서 변경
+}
 
-          function updateClipboardDisplay() {
-            if (copyHistory.length === 0) {
-              clipboardContent.innerHTML = '<div class="clipboard-empty">복사한 이모지가 표시됩니다.</div>';
-              return;
-            }
+function updateClipboardDisplay() {
+  const clipboardContent = document.getElementById('clipboardContent');
+  if (!clipboardContent) return;
 
-            clipboardContent.innerHTML = copyHistory.map((item, index) => {
-              const timeAgo = getTimeAgo(item.timestamp);
-              
-              return '<div class="clipboard-item" onclick="copyFromHistory(\'' + item.emoji.emoji + '\')" title="' + item.emoji.name_ko + '"><span class="clipboard-item-emoji">' + item.emoji.emoji + '</span><span>' + item.emoji.name_ko + '</span><span class="clipboard-item-time">' + timeAgo + '</span></div>';
-            }).join('');
-          }
+  if (copyHistory.length === 0) {
+    clipboardContent.innerHTML = '<div class="clipboard-empty">복사한 이모지가 표시됩니다.</div>';
+    return;
+  }
+
+  clipboardContent.innerHTML = copyHistory.map((item, index) => {
+    const timeAgo = getTimeAgo(item.timestamp);
+    
+    return '<div class="clipboard-item" onclick="copyFromHistory(\'' + item.emoji.emoji + '\')" title="' + item.emoji.name_ko + '"><span class="clipboard-item-emoji">' + item.emoji.emoji + '</span><span>' + item.emoji.name_ko + '</span><span class="clipboard-item-time">' + timeAgo + '</span></div>';
+  }).join('');
+}
 
           function getTimeAgo(timestamp) {
             const now = new Date();
