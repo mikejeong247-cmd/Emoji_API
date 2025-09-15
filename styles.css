@@ -150,7 +150,7 @@ h1 {
     font-size: 2rem;
     display: block;
     user-select: none;
-    font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', 'Android Emoji', 'EmojiSymbols', 'EmojiOne', sans-serif;
+    font-family: 'Segoe UI Emoji', 'Noto Color Emoji', 'Android Emoji', 'EmojiSymbols', 'EmojiOne', sans-serif;
 }
 
 .loading {
