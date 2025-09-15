@@ -137,19 +137,129 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   function getCategoryName(category) {
+    // 브라우저 언어 감지
+    const lang = navigator.language.toLowerCase();
+    
     const categoryNames = {
-      'smileys': '스마일리',
-      'people': '사람',
-      'animals': '동물',
-      'food': '음식',
-      'travel': '여행',
-      'activities': '활동',
-      'objects': '사물',
-      'symbols': '기호',
-      'flags': '깃발',
-      'nature': '자연'
+      'all': {
+        'ko': '전체',
+        'en': 'All',
+        'ja': 'すべて',
+        'zh': '全部',
+        'es': 'Todos',
+        'fr': 'Tous',
+        'de': 'Alle',
+        'default': 'All'
+      },
+      'smileys': {
+        'ko': '스마일리',
+        'en': 'Smileys & Emotions',
+        'ja': '顔文字',
+        'zh': '笑脸和情感',
+        'es': 'Caritas y Emociones',
+        'fr': 'Visages et Émotions',
+        'de': 'Gesichter und Emotionen',
+        'default': 'Smileys'
+      },
+      'people': {
+        'ko': '사람',
+        'en': 'People & Body',
+        'ja': '人々',
+        'zh': '人物和身体',
+        'es': 'Personas y Cuerpo',
+        'fr': 'Personnes et Corps',
+        'de': 'Menschen und Körper',
+        'default': 'People'
+      },
+      'animals': {
+        'ko': '동물',
+        'en': 'Animals & Nature',
+        'ja': '動物',
+        'zh': '动物和自然',
+        'es': 'Animales y Naturaleza',
+        'fr': 'Animaux et Nature',
+        'de': 'Tiere und Natur',
+        'default': 'Animals'
+      },
+      'food': {
+        'ko': '음식',
+        'en': 'Food & Drink',
+        'ja': '食べ物',
+        'zh': '食物和饮料',
+        'es': 'Comida y Bebida',
+        'fr': 'Nourriture et Boisson',
+        'de': 'Essen und Trinken',
+        'default': 'Food'
+      },
+      'travel': {
+        'ko': '여행',
+        'en': 'Travel & Places',
+        'ja': '旅行',
+        'zh': '旅行和地点',
+        'es': 'Viajes y Lugares',
+        'fr': 'Voyages et Lieux',
+        'de': 'Reisen und Orte',
+        'default': 'Travel'
+      },
+      'activities': {
+        'ko': '활동',
+        'en': 'Activities',
+        'ja': '活動',
+        'zh': '活动',
+        'es': 'Actividades',
+        'fr': 'Activités',
+        'de': 'Aktivitäten',
+        'default': 'Activities'
+      },
+      'objects': {
+        'ko': '사물',
+        'en': 'Objects',
+        'ja': 'オブジェクト',
+        'zh': '物体',
+        'es': 'Objetos',
+        'fr': 'Objets',
+        'de': 'Objekte',
+        'default': 'Objects'
+      },
+      'symbols': {
+        'ko': '기호',
+        'en': 'Symbols',
+        'ja': '記号',
+        'zh': '符号',
+        'es': 'Símbolos',
+        'fr': 'Symboles',
+        'de': 'Symbole',
+        'default': 'Symbols'
+      },
+      'flags': {
+        'ko': '깃발',
+        'en': 'Flags',
+        'ja': '旗',
+        'zh': '旗帜',
+        'es': 'Banderas',
+        'fr': 'Drapeaux',
+        'de': 'Flaggen',
+        'default': 'Flags'
+      },
+      'nature': {
+        'ko': '자연',
+        'en': 'Nature',
+        'ja': '自然',
+        'zh': '自然',
+        'es': 'Naturaleza',
+        'fr': 'Nature',
+        'de': 'Natur',
+        'default': 'Nature'
+      }
     };
-    return categoryNames[category] || category;
+
+    const categoryData = categoryNames[category];
+    if (!categoryData) return category;
+
+    // 언어 매칭 (언어-국가 코드에서 언어 부분만 추출)
+    const langCode = lang.split('-')[0];
+    
+    return categoryData[langCode] || categoryData['default'];
   }
 
   function getCategoryEmoji(category) {
