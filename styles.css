@@ -181,6 +181,20 @@ h1 {
     opacity: 1;
 }
 
+footer {
+    background: #333;
+    color: white;
+    text-align: center;
+    padding: 2rem;
+    margin-top: 3rem;
+}
+
+.source-info {
+    margin-top: 0.5rem;
+    font-size: 0.9rem;
+    opacity: 0.8;
+}
+
 @media (max-width: 768px) {
     .container {
         padding: 1rem;
@@ -212,12 +226,8 @@ h1 {
         padding: 0.5rem 1rem;
         font-size: 0.8rem;
     }
-}
-
-footer {
-    background: #333;
-    color: white;
-    text-align: center;
-    padding: 2rem;
-    margin-top: 3rem;
+    
+    .source-info {
+        font-size: 0.8rem;
+    }
 }
