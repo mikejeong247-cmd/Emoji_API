@@ -8,18 +8,24 @@
 </head>
 <body>
   <header class="header">
-    <h1 style="text-align: center; color: var(--text-primary); margin: 0; font-size: 1.5rem;">
-      이모지 복사 도구
+    <h1 style="text-align: center; color: var(--text-primary); margin: 0; font-size: 1.5rem; font-weight: 600;">
+      📋 이모지 복사 도구
     </h1>
+    <p style="text-align: center; color: var(--text-secondary); margin: 0.5rem 0 0 0; font-size: 0.875rem;">
+      이모지를 클릭하면 자동으로 복사됩니다
+    </p>
   </header>
+  
   <main>
     <div id="grid" class="grid" aria-live="polite"></div>
     <div class="actions">
       <button id="more" class="more" hidden>더보기</button>
     </div>
   </main>
+  
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
   <div id="live" class="sr-only" aria-live="polite"></div>
+  
   <script src="app.js"></script>
 </body>
 </html>
