@@ -38,17 +38,7 @@ class EmojiPicker {
     this.showLoading();
     
     try {
-      // 실제 데이터 파일이 없는 경우를 위한 샘플 데이터
-      let data;
-      try {
-        const response = await fetch('./data/emojis.json');
-        if (!response.ok) throw new Error('데이터 파일 없음');
-        data = await response.json();
-      } catch {
-        // 샘플 데이터로 대체
-        data = this.getSampleData();
-      }
-
+      const data = await this.fetchFromGoogleSheets();
       this.emojis = data;
       this.processCategories();
       this.hideLoading();
@@ -56,6 +46,94 @@ class EmojiPicker {
       this.hideLoading();
       throw error;
     }
+  }
+
+  async fetchFromGoogleSheets() {
+    const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTc7jzLftQBL-UUnwIHYR4yXHLp-fX3OKB0cE8l9tWKjCAr_Y_IpzO6P_aAbp6MZ_s2Qt26PC_71CVX/pub?gid=840637915&single=true&output=csv';
+    
+    try {
+      const response = await fetch(SHEET_URL);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const csvText = await response.text();
+      return this.parseCSVToJSON(csvText);
+    } catch (error) {
+      console.warn('Google Sheets 데이터 로드 실패, 샘플 데이터 사용:', error);
+      return this.getSampleData();
+    }
+  }
+
+  parseCSVToJSON(csvText) {
+    const lines = csvText.trim().split('\n');
+    if (lines.length < 2) {
+      throw new Error('CSV 데이터가 비어있습니다');
+    }
+
+    // 헤더 파싱 (공백 제거)
+    const headers = lines[0].split(',').map(header => 
+      header.replace(/"/g, '').trim()
+    );
+    
+    console.log('CSV 헤더:', headers);
+
+    const data = [];
+    
+    for (let i = 1; i < lines.length; i++) {
+      const line = lines[i].trim();
+      if (!line) continue;
+
+      // CSV 파싱 (쉼표로 분할하되 따옴표 내부는 제외)
+      const values = this.parseCSVLine(line);
+      
+      if (values.length !== headers.length) {
+        console.warn(`라인 ${i + 1}: 컬럼 수가 맞지 않음`, values);
+        continue;
+      }
+
+      const item = {};
+      headers.forEach((header, index) => {
+        let value = values[index] || '';
+        
+        // 숫자 변환 (id 필드)
+        if (header === 'id' && value) {
+          value = parseInt(value, 10);
+        }
+        
+        item[header] = value;
+      });
+
+      // 필수 필드 검증
+      if (item.emoji && item.name_ko) {
+        data.push(item);
+      }
+    }
+
+    console.log(`총 ${data.length}개의 이모지 데이터 로드됨`);
+    return data;
+  }
+
+  parseCSVLine(line) {
+    const result = [];
+    let current = '';
+    let inQuotes = false;
+    
+    for (let i = 0; i < line.length; i++) {
+      const char = line[i];
+      
+      if (char === '"') {
+        inQuotes = !inQuotes;
+      } else if (char === ',' && !inQuotes) {
+        result.push(current.trim());
+        current = '';
+      } else {
+        current += char;
+      }
+    }
+    
+    result.push(current.trim());
+    return result;
   }
 
   getSampleData() {
