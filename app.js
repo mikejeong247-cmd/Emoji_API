@@ -24,42 +24,10 @@ const categoryIcons = {
     'Flags': '🏳️'
 };
 
-// 유니코드를 이모지로 변환
-function convertUnicodeToEmoji(unicode) {
-    if (!unicode || typeof unicode !== 'string') return '';
-    
-    console.log('변환 시도:', unicode);
-    
-    // 이미 이모지인 경우
-    if (!/U\+/.test(unicode)) return unicode;
-    
-    try {
-        // U+1F600 형태 처리
-        const matches = unicode.match(/U\+([0-9A-F]+)/gi);
-        if (!matches) return '';
-        
-        console.log('매치된 유니코드:', matches);
-        
-        const codePoints = matches.map(match => {
-            const hex = match.substring(2);
-            const code = parseInt(hex, 16);
-            console.log(`${match} -> ${hex} -> ${code}`);
-            return code;
-        });
-        
-        const emoji = String.fromCodePoint(...codePoints);
-        console.log('변환된 이모지:', emoji);
-        return emoji;
-    } catch (error) {
-        console.warn('변환 실패:', unicode, error);
-        return '';
-    }
-}
-
-// 데이터 로드 - 가장 간단한 방식
+// 데이터 로드 - 변환 없이 원본 사용
 async function loadEmojis() {
     try {
-        console.log('간단한 split 방식으로 시작...');
+        console.log('변환 없이 원본 데이터 사용...');
         
         const response = await fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vTc7jzLftQBL-UUnwIHYR4yXHLp-fX3OKB0cE8l9tWKjCAr_Y_IpzO6P_aAbp6MZ_s2Qt26PC_71CVX/pub?gid=840637915&single=true&output=csv');
         const csvText = await response.text();
@@ -69,65 +37,42 @@ async function loadEmojis() {
         const lines = csvText.split('\n');
         console.log('총 라인:', lines.length);
         
-        // 헤더 출력
-        console.log('헤더:', lines[0]);
-        
-        // 첫 몇 개 데이터 라인 출력
-        for (let i = 1; i <= 3 && i < lines.length; i++) {
-            console.log(`라인 ${i}:`, lines[i]);
-        }
-        
         allEmojis = [];
         
-        // 간단한 split 방식으로 파싱
         for (let i = 1; i < lines.length; i++) {
             const line = lines[i].trim();
             if (!line) continue;
             
-            // 따옴표 제거 후 쉼표로 분할
+            // 간단한 파싱
             const cleanLine = line.replace(/"/g, '');
             const fields = cleanLine.split(',');
             
-            if (i <= 3) {
-                console.log(`파싱 ${i}:`, fields);
-            }
-            
             if (fields.length < 3) continue;
             
-            const unicodeStr = fields[0]?.trim() || '';
+            const firstField = fields[0]?.trim() || '';
             const nameKo = fields[1]?.trim() || '';
             const category = fields[2]?.trim() || '';
             
-            if (!unicodeStr) continue;
-            
-            // 변환 시도
-            const emoji = convertUnicodeToEmoji(unicodeStr);
-            
-            if (emoji && emoji !== unicodeStr) {
+            // 변환 없이 첫 번째 필드를 그대로 사용
+            if (firstField) {
                 allEmojis.push({
-                    emoji: emoji,
+                    emoji: firstField,  // 변환 없이 그대로 사용
                     name_ko: nameKo || '이모지',
                     category: category || '기타'
                 });
                 
-                if (allEmojis.length <= 5) {
-                    console.log(`성공 ${allEmojis.length}:`, emoji, nameKo);
+                // 처음 10개 출력
+                if (allEmojis.length <= 10) {
+                    console.log(`데이터 ${allEmojis.length}:`, firstField, nameKo);
                 }
             }
         }
         
-        console.log(`최종 결과: ${allEmojis.length}개 이모지`);
+        console.log(`총 ${allEmojis.length}개 데이터 로드`);
         
         if (allEmojis.length === 0) {
-            // 테스트용으로 하드코딩된 이모지 추가
-            console.log('변환 실패, 테스트 이모지 추가');
-            allEmojis = [
-                { emoji: '😀', name_ko: '웃는 얼굴', category: '스마일리 및 감정' },
-                { emoji: '😂', name_ko: '눈물 흘리며 웃는 얼굴', category: '스마일리 및 감정' },
-                { emoji: '❤️', name_ko: '하트', category: '기호' },
-                { emoji: '👍', name_ko: '좋아요', category: '사람 및 신체' },
-                { emoji: '🎉', name_ko: '축하', category: '사물' }
-            ];
+            document.getElementById('emojiGrid').innerHTML = '<div class="loading">데이터가 없습니다</div>';
+            return;
         }
         
         createCategories();
