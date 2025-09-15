@@ -24,39 +24,65 @@ const categoryIcons = {
     'Flags': '🏳️'
 };
 
+// CSV 파싱 함수 (따옴표와 쉼표 처리)
+function parseCSVLine(line) {
+    const result = [];
+    let current = '';
+    let inQuotes = false;
+    
+    for (let i = 0; i < line.length; i++) {
+        const char = line[i];
+        
+        if (char === '"') {
+            inQuotes = !inQuotes;
+        } else if (char === ',' && !inQuotes) {
+            result.push(current.trim());
+            current = '';
+        } else {
+            current += char;
+        }
+    }
+    
+    result.push(current.trim());
+    return result;
+}
+
 // 유니코드를 이모지로 변환
 function unicodeToEmoji(unicode) {
     if (!unicode) return '';
     
-    // 이미 이모지인 경우
+    // 이미 이모지인 경우 (유니코드가 아닌 실제 이모지)
     if (!/^U\+/.test(unicode)) {
         return unicode;
     }
     
     try {
-        // U+1F600 형태를 처리
-        if (unicode.startsWith('U+')) {
+        // 단일 유니코드 처리 (U+1F600)
+        if (unicode.match(/^U\+[0-9A-F]+$/i)) {
             const hex = unicode.substring(2);
             const codePoint = parseInt(hex, 16);
             return String.fromCodePoint(codePoint);
         }
         
-        // 여러 유니코드가 연결된 경우 (예: U+1F468 U+200D U+1F4BB)
+        // 복합 유니코드 처리 (U+1F468 U+200D U+1F4BB 등)
         if (unicode.includes(' U+')) {
-            const codes = unicode.split(' ').map(code => {
+            const codes = unicode.split(/\s+/).map(code => {
                 if (code.startsWith('U+')) {
                     return parseInt(code.substring(2), 16);
                 }
                 return null;
             }).filter(code => code !== null);
             
-            return String.fromCodePoint(...codes);
+            if (codes.length > 0) {
+                return String.fromCodePoint(...codes);
+            }
         }
         
-        return unicode;
+        console.log('변환할 수 없는 유니코드:', unicode);
+        return '❓'; // 변환 실패시 물음표 이모지
     } catch (error) {
         console.error('유니코드 변환 오류:', unicode, error);
-        return unicode;
+        return '❓';
     }
 }
 
@@ -76,37 +102,61 @@ async function loadEmojis() {
         const response = await fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vTc7jzLftQBL-UUnwIHYR4yXHLp-fX3OKB0cE8l9tWKjCAr_Y_IpzO6P_aAbp6MZ_s2Qt26PC_71CVX/pub?gid=840637915&single=true&output=csv');
         const csvText = await response.text();
         
-        const lines = csvText.split('\n');
-        const headers = lines[0].split(',');
+        console.log('CSV 데이터 샘플:', csvText.slice(0, 500));
         
-        allEmojis = lines.slice(1)
-            .filter(line => line.trim())
-            .map(line => {
-                const values = line.split(',');
-                const emojiUnicode = values[0]?.trim() || '';
-                const name_ko = values[1]?.trim() || '';
-                const category = values[2]?.trim() || '';
-                const code = values[3]?.trim() || '';
-                
-                // 유니코드를 실제 이모지로 변환
-                let displayEmoji = unicodeToEmoji(emojiUnicode);
-                
-                // 국가 코드가 있으면 깃발 이모지로 변환 (우선순위)
-                if (code && code.length === 2 && /^[A-Z]{2}$/.test(code)) {
-                    displayEmoji = countryCodeToFlag(code);
-                }
-                
-                return {
-                    emoji: displayEmoji,
-                    name_ko,
-                    category,
-                    code,
-                    original: emojiUnicode
-                };
-            })
-            .filter(item => item.emoji);
+        const lines = csvText.split('\n').filter(line => line.trim());
+        console.log('총 라인 수:', lines.length);
+        
+        // 헤더 제거
+        const dataLines = lines.slice(1);
+        
+        allEmojis = dataLines.map((line, index) => {
+            const values = parseCSVLine(line);
+            
+            if (values.length < 3) {
+                console.log(`라인 ${index + 2} 스킵 (데이터 부족):`, line);
+                return null;
+            }
+            
+            const emojiUnicode = values[0]?.replace(/"/g, '').trim() || '';
+            const name_ko = values[1]?.replace(/"/g, '').trim() || '';
+            const category = values[2]?.replace(/"/g, '').trim() || '';
+            const code = values[3]?.replace(/"/g, '').trim() || '';
+            
+            // 유니코드를 실제 이모지로 변환
+            let displayEmoji = unicodeToEmoji(emojiUnicode);
+            
+            // 국가 코드가 있으면 깃발 이모지로 변환 (우선순위)
+            if (code && code.length === 2 && /^[A-Z]{2}$/.test(code)) {
+                displayEmoji = countryCodeToFlag(code);
+            }
+            
+            if (index < 5) {
+                console.log(`데이터 ${index + 1}:`, {
+                    original: emojiUnicode,
+                    converted: displayEmoji,
+                    name: name_ko,
+                    category: category
+                });
+            }
+            
+            return {
+                emoji: displayEmoji,
+                name_ko,
+                category,
+                code,
+                original: emojiUnicode
+            };
+        }).filter(item => item !== null && item.emoji && item.emoji !== '❓');
 
         console.log(`총 ${allEmojis.length}개의 이모지를 로드했습니다.`);
+        
+        if (allEmojis.length === 0) {
+            console.error('변환된 이모지가 없습니다. 데이터 형식을 확인하세요.');
+            document.getElementById('emojiGrid').innerHTML = '<div class="loading">이모지 변환에 실패했습니다.</div>';
+            return;
+        }
+        
         createCategories();
         displayEmojis();
     } catch (error) {
