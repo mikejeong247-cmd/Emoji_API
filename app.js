@@ -174,11 +174,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   function updateMoreButton() {
-    const hasMore = displayedCount < emojis.length;
+    const hasMore = displayedCount < filteredEmojis.length;
     moreButton.hidden = !hasMore;
     
     if (hasMore) {
-      const remaining = emojis.length - displayedCount;
+      const remaining = filteredEmojis.length - displayedCount;
       moreButton.textContent = `더보기 (${remaining}개 남음)`;
     }
   }
@@ -190,12 +190,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // 복사 히스토리 사이드바 생성
   function createSidebar() {
-    const sidebarToggle = document.createElement('button');
+    sidebarToggle = document.createElement('button');
     sidebarToggle.className = 'sidebar-toggle';
     sidebarToggle.innerHTML = '📋';
     sidebarToggle.title = '복사 히스토리';
     
-    const sidebar = document.createElement('div');
+    sidebar = document.createElement('div');
     sidebar.className = 'copy-sidebar';
     sidebar.innerHTML = `
       <div class="copy-sidebar-header">
@@ -207,6 +207,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           <div class="copy-empty">
             <span class="copy-empty-emoji">📋</span>
             <div>아직 복사한 이모지가 없습니다</div>
+            <small>이모지를 클릭해서 복사해보세요!</small>
           </div>
         </div>
       </div>
@@ -216,13 +217,22 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.body.appendChild(sidebar);
 
     sidebarToggle.addEventListener('click', () => {
-      sidebar.classList.toggle('open');
-      sidebarToggle.classList.toggle('active');
+      if (sidebar.classList.contains('open')) {
+        closeSidebar();
+      } else {
+        openSidebar();
+      }
     });
 
     sidebar.querySelector('.copy-sidebar-toggle').addEventListener('click', () => {
-      sidebar.classList.remove('open');
-      sidebarToggle.classList.remove('active');
+      closeSidebar();
+    });
+
+    // ESC 키로 사이드바 닫기
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && sidebar.classList.contains('open')) {
+        closeSidebar();
+      }
     });
   }
 
