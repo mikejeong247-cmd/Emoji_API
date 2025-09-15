@@ -5,12 +5,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const moreButton = document.getElementById('more');
   const toast = document.getElementById('toast');
   
-  // ... 모든 함수 정의들 ...
-  
-  // 맨 끝에서 loadEmojis 호출
-  loadEmojis();
-});
-  
   let emojis = [];
   let filteredEmojis = [];
   let displayedCount = 0;
@@ -20,45 +14,46 @@ document.addEventListener('DOMContentLoaded', () => {
   let categories = new Map();
 
   // Google Sheets에서 데이터 로드
-  async function loadEmojis() {
-  try {
+  function loadEmojis() {
     grid.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; padding: 2rem;">이모지를 불러오는 중...</div>';
     
     const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTc7jzLftQBL-UUnwIHYR4yXHLp-fX3OKB0cE8l9tWKjCAr_Y_IpzO6P_aAbp6MZ_s2Qt26PC_71CVX/pub?gid=840637915&single=true&output=csv';
     
-    // 직접 요청 시도
-    const response = await fetch(csvUrl, {
-      method: 'GET',
-      mode: 'cors',
-      headers: {
-        'Accept': 'text/csv'
+    // CORS 프록시를 통한 요청
+    const proxyUrl = 'https://api.allorigins.win/get?url=' + encodeURIComponent(csvUrl);
+    
+    fetch(proxyUrl)
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('프록시 요청 실패: ' + response.status);
       }
+      return response.json();
+    })
+    .then(data => {
+      if (!data.contents) {
+        throw new Error('CSV 데이터가 없습니다.');
+      }
+      
+      const csvText = data.contents;
+      emojis = parseCSV(csvText);
+      
+      if (emojis.length === 0) {
+        throw new Error('파싱된 데이터가 없습니다.');
+      }
+      
+      processCategories();
+      console.log('Google Sheets 데이터 로드 완료:', emojis.length, '개');
+      
+      renderCategories();
+      filterAndDisplayEmojis();
+    })
+    .catch(error => {
+      console.error('Google Sheets 로드 오류:', error);
+      grid.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; padding: 2rem; color: red;">Google Sheets 데이터를 불러올 수 없습니다.<br>' + error.message + '</div>';
     });
-    
-    if (!response.ok) {
-      throw new Error('HTTP error! status: ' + response.status);
-    }
-    
-    const csvText = await response.text();
-    emojis = parseCSV(csvText);
-    
-    if (emojis.length === 0) {
-      throw new Error('파싱된 데이터가 없습니다.');
-    }
-    
-    processCategories();
-    console.log('Google Sheets 데이터 로드 완료:', emojis.length, '개');
-    
-    renderCategories();
-    filterAndDisplayEmojis();
-    
-  } catch (error) {
-    console.error('Google Sheets 로드 오류:', error);
-    grid.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; padding: 2rem; color: red;">Google Sheets 데이터를 불러올 수 없습니다.<br>스프레드시트가 공개되어 있는지 확인해주세요.</div>';
   }
-}
 
-// CSV 파싱
+  // CSV 파싱
   function parseCSV(csvText) {
     const lines = csvText.trim().split('\n');
     if (lines.length < 2) return [];
@@ -289,12 +284,11 @@ document.addEventListener('DOMContentLoaded', () => {
     return card;
   }
 
-  async function copyEmoji(emoji) {
-    try {
-      await navigator.clipboard.writeText(emoji.emoji);
+  function copyEmoji(emoji) {
+    navigator.clipboard.writeText(emoji.emoji).then(() => {
       addToHistory(emoji);
       showToast(emoji.emoji + ' 복사됨!');
-    } catch (error) {
+    }).catch(error => {
       const textArea = document.createElement('textarea');
       textArea.value = emoji.emoji;
       textArea.style.position = 'fixed';
@@ -306,7 +300,7 @@ document.addEventListener('DOMContentLoaded', () => {
       
       addToHistory(emoji);
       showToast(emoji.emoji + ' 복사됨!');
-    }
+    });
   }
 
   function addToHistory(emoji) {
@@ -351,11 +345,10 @@ document.addEventListener('DOMContentLoaded', () => {
     return '방금 전';
   }
 
-  window.copyFromHistory = async function(text) {
-    try {
-      await navigator.clipboard.writeText(text);
+  window.copyFromHistory = function(text) {
+    navigator.clipboard.writeText(text).then(() => {
       showToast(text + ' 복사됨!');
-    } catch (error) {
+    }).catch(error => {
       const textArea = document.createElement('textarea');
       textArea.value = text;
       textArea.style.position = 'fixed';
@@ -365,7 +358,7 @@ document.addEventListener('DOMContentLoaded', () => {
       document.execCommand('copy');
       document.body.removeChild(textArea);
       showToast(text + ' 복사됨!');
-    }
+    });
   };
 
   function showToast(message) {
@@ -390,5 +383,5 @@ document.addEventListener('DOMContentLoaded', () => {
     moreButton.addEventListener('click', displayEmojis);
   }
 
-  await loadEmojis();
+  loadEmojis();
 });
