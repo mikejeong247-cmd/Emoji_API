@@ -24,6 +24,42 @@ const categoryIcons = {
     'Flags': '🏳️'
 };
 
+// 유니코드를 이모지로 변환
+function unicodeToEmoji(unicode) {
+    if (!unicode) return '';
+    
+    // 이미 이모지인 경우
+    if (!/^U\+/.test(unicode)) {
+        return unicode;
+    }
+    
+    try {
+        // U+1F600 형태를 처리
+        if (unicode.startsWith('U+')) {
+            const hex = unicode.substring(2);
+            const codePoint = parseInt(hex, 16);
+            return String.fromCodePoint(codePoint);
+        }
+        
+        // 여러 유니코드가 연결된 경우 (예: U+1F468 U+200D U+1F4BB)
+        if (unicode.includes(' U+')) {
+            const codes = unicode.split(' ').map(code => {
+                if (code.startsWith('U+')) {
+                    return parseInt(code.substring(2), 16);
+                }
+                return null;
+            }).filter(code => code !== null);
+            
+            return String.fromCodePoint(...codes);
+        }
+        
+        return unicode;
+    } catch (error) {
+        console.error('유니코드 변환 오류:', unicode, error);
+        return unicode;
+    }
+}
+
 // 국가 코드를 깃발 이모지로 변환
 function countryCodeToFlag(countryCode) {
     if (!countryCode || countryCode.length !== 2) return '';
@@ -47,13 +83,15 @@ async function loadEmojis() {
             .filter(line => line.trim())
             .map(line => {
                 const values = line.split(',');
-                const emoji = values[0]?.trim() || '';
+                const emojiUnicode = values[0]?.trim() || '';
                 const name_ko = values[1]?.trim() || '';
                 const category = values[2]?.trim() || '';
                 const code = values[3]?.trim() || '';
                 
-                // 국가 코드가 있으면 깃발 이모지로 변환
-                let displayEmoji = emoji;
+                // 유니코드를 실제 이모지로 변환
+                let displayEmoji = unicodeToEmoji(emojiUnicode);
+                
+                // 국가 코드가 있으면 깃발 이모지로 변환 (우선순위)
                 if (code && code.length === 2 && /^[A-Z]{2}$/.test(code)) {
                     displayEmoji = countryCodeToFlag(code);
                 }
@@ -62,7 +100,8 @@ async function loadEmojis() {
                     emoji: displayEmoji,
                     name_ko,
                     category,
-                    code
+                    code,
+                    original: emojiUnicode
                 };
             })
             .filter(item => item.emoji);
@@ -146,7 +185,7 @@ function displayEmojis() {
     }
     
     grid.innerHTML = filteredEmojis.map(emoji => 
-        `<div class="emoji-item" onclick="copyEmoji('${emoji.emoji}', '${emoji.name_ko}')">
+        `<div class="emoji-item" onclick="copyEmoji('${emoji.emoji}', '${emoji.name_ko}')" title="${emoji.name_ko}">
             <span class="emoji">${emoji.emoji}</span>
         </div>`
     ).join('');
