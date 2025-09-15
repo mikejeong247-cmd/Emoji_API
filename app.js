@@ -24,42 +24,6 @@ const categoryIcons = {
     'Flags': '🏳️'
 };
 
-// 강력한 CSV 파싱 함수
-function parseCSVLine(line) {
-    const result = [];
-    let current = '';
-    let inQuotes = false;
-    let i = 0;
-    
-    while (i < line.length) {
-        const char = line[i];
-        
-        if (char === '"') {
-            if (inQuotes && line[i + 1] === '"') {
-                // 이스케이프된 따옴표
-                current += '"';
-                i += 2;
-            } else {
-                // 따옴표 시작/끝
-                inQuotes = !inQuotes;
-                i++;
-            }
-        } else if (char === ',' && !inQuotes) {
-            // 구분자
-            result.push(current.trim());
-            current = '';
-            i++;
-        } else {
-            current += char;
-            i++;
-        }
-    }
-    
-    // 마지막 필드
-    result.push(current.trim());
-    return result;
-}
-
 // 유니코드를 이모지로 변환
 function convertUnicodeToEmoji(unicode) {
     if (!unicode || typeof unicode !== 'string') return '';
@@ -98,17 +62,18 @@ function countryCodeToFlag(code) {
     }
 }
 
-// 데이터 로드
+// 데이터 로드 - TSV 방식
 async function loadEmojis() {
     try {
-        console.log('데이터 로딩 시작...');
+        console.log('TSV 데이터 로딩 시작...');
         
-        const response = await fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vTc7jzLftQBL-UUnwIHYR4yXHLp-fX3OKB0cE8l9tWKjCAr_Y_IpzO6P_aAbp6MZ_s2Qt26PC_71CVX/pub?gid=840637915&single=true&output=csv');
-        const csvText = await response.text();
+        // TSV URL로 변경
+        const response = await fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vTc7jzLftQBL-UUnwIHYR4yXHLp-fX3OKB0cE8l9tWKjCAr_Y_IpzO6P_aAbp6MZ_s2Qt26PC_71CVX/pub?gid=840637915&single=true&output=tsv');
+        const tsvText = await response.text();
         
-        console.log('CSV 길이:', csvText.length);
+        console.log('TSV 길이:', tsvText.length);
         
-        const lines = csvText.split('\n');
+        const lines = tsvText.split('\n');
         console.log('총 라인:', lines.length);
         
         // 헤더 확인
@@ -124,7 +89,8 @@ async function loadEmojis() {
         
         for (let i = 0; i < dataLines.length; i++) {
             const line = dataLines[i];
-            const fields = parseCSVLine(line);
+            // TSV는 탭으로 구분 - 훨씬 간단함!
+            const fields = line.split('\t');
             
             // 디버깅용 - 처음 몇 개만 출력
             if (i < 3) {
@@ -166,7 +132,7 @@ async function loadEmojis() {
         console.log(`최종 결과: ${allEmojis.length}개 이모지`);
         
         if (allEmojis.length === 0) {
-            document.getElementById('emojiGrid').innerHTML = '<div class="loading">변환된 이모지가 없습니다.<br>데이터 형식을 확인 중...</div>';
+            document.getElementById('emojiGrid').innerHTML = '<div class="loading">변환된 이모지가 없습니다.<br>TSV 데이터 확인 중...</div>';
             return;
         }
         
@@ -174,8 +140,8 @@ async function loadEmojis() {
         displayEmojis();
         
     } catch (error) {
-        console.error('로드 오류:', error);
-        document.getElementById('emojiGrid').innerHTML = `<div class="loading">로드 실패: ${error.message}</div>`;
+        console.error('TSV 로드 오류:', error);
+        document.getElementById('emojiGrid').innerHTML = `<div class="loading">TSV 로드 실패: ${error.message}</div>`;
     }
 }
 
