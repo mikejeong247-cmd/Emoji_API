@@ -248,9 +248,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   function createEmojiCard(emoji) {
     const card = document.createElement('button');
     card.className = 'emoji-card';
-    card.title = emoji.name_ko;
     
-    card.innerHTML = '<div class="emoji-symbol">' + emoji.emoji + '</div><div class="emoji-name">' + emoji.name_ko + '</div>';
+    card.innerHTML = '<div class="emoji-symbol">' + emoji.emoji + '</div>';
 
     card.addEventListener('click', () => copyEmoji(emoji));
     return card;
