@@ -52,16 +52,24 @@ class EmojiPicker {
     const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTc7jzLftQBL-UUnwIHYR4yXHLp-fX3OKB0cE8l9tWKjCAr_Y_IpzO6P_aAbp6MZ_s2Qt26PC_71CVX/pub?gid=840637915&single=true&output=csv';
     
     try {
-      const response = await fetch(SHEET_URL);
+      const response = await fetch(SHEET_URL, {
+        method: 'GET',
+        mode: 'cors',
+        headers: {
+          'Accept': 'text/csv,text/plain,*/*'
+        }
+      });
+      
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       
       const csvText = await response.text();
+      console.log('CSV 데이터 로드 성공:', csvText.substring(0, 200));
       return this.parseCSVToJSON(csvText);
     } catch (error) {
-      console.warn('Google Sheets 데이터 로드 실패, 샘플 데이터 사용:', error);
-      return this.getSampleData();
+      console.error('Google Sheets 데이터 로드 오류:', error);
+      throw error;
     }
   }
 
