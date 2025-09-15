@@ -78,7 +78,6 @@ function unicodeToEmoji(unicode) {
             }
         }
         
-        console.log('변환할 수 없는 유니코드:', unicode);
         return '❓'; // 변환 실패시 물음표 이모지
     } catch (error) {
         console.error('유니코드 변환 오류:', unicode, error);
@@ -102,10 +101,7 @@ async function loadEmojis() {
         const response = await fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vTc7jzLftQBL-UUnwIHYR4yXHLp-fX3OKB0cE8l9tWKjCAr_Y_IpzO6P_aAbp6MZ_s2Qt26PC_71CVX/pub?gid=840637915&single=true&output=csv');
         const csvText = await response.text();
         
-        console.log('CSV 데이터 샘플:', csvText.slice(0, 500));
-        
         const lines = csvText.split('\n').filter(line => line.trim());
-        console.log('총 라인 수:', lines.length);
         
         // 헤더 제거
         const dataLines = lines.slice(1);
@@ -114,7 +110,6 @@ async function loadEmojis() {
             const values = parseCSVLine(line);
             
             if (values.length < 3) {
-                console.log(`라인 ${index + 2} 스킵 (데이터 부족):`, line);
                 return null;
             }
             
@@ -131,15 +126,6 @@ async function loadEmojis() {
                 displayEmoji = countryCodeToFlag(code);
             }
             
-            if (index < 5) {
-                console.log(`데이터 ${index + 1}:`, {
-                    original: emojiUnicode,
-                    converted: displayEmoji,
-                    name: name_ko,
-                    category: category
-                });
-            }
-            
             return {
                 emoji: displayEmoji,
                 name_ko,
@@ -152,7 +138,7 @@ async function loadEmojis() {
         console.log(`총 ${allEmojis.length}개의 이모지를 로드했습니다.`);
         
         if (allEmojis.length === 0) {
-            console.error('변환된 이모지가 없습니다. 데이터 형식을 확인하세요.');
+            console.error('변환된 이모지가 없습니다.');
             document.getElementById('emojiGrid').innerHTML = '<div class="loading">이모지 변환에 실패했습니다.</div>';
             return;
         }
@@ -217,7 +203,7 @@ function filterCategory(category) {
     displayEmojis();
 }
 
-// 이모지 표시
+// 이모지 표시 (HTML 이스케이핑 방지)
 function displayEmojis() {
     const grid = document.getElementById('emojiGrid');
     if (!grid) {
@@ -234,11 +220,22 @@ function displayEmojis() {
         return;
     }
     
-    grid.innerHTML = filteredEmojis.map(emoji => 
-        `<div class="emoji-item" onclick="copyEmoji('${emoji.emoji}', '${emoji.name_ko}')" title="${emoji.name_ko}">
-            <span class="emoji">${emoji.emoji}</span>
-        </div>`
-    ).join('');
+    // DOM 요소를 직접 생성하여 innerHTML 이스케이핑 문제 방지
+    grid.innerHTML = '';
+    
+    filteredEmojis.forEach(emojiData => {
+        const emojiItem = document.createElement('div');
+        emojiItem.className = 'emoji-item';
+        emojiItem.title = emojiData.name_ko;
+        emojiItem.onclick = () => copyEmoji(emojiData.emoji, emojiData.name_ko);
+        
+        const emojiSpan = document.createElement('span');
+        emojiSpan.className = 'emoji';
+        emojiSpan.textContent = emojiData.emoji; // innerHTML 대신 textContent 사용
+        
+        emojiItem.appendChild(emojiSpan);
+        grid.appendChild(emojiItem);
+    });
 }
 
 // 이모지 복사 (이모지만 복사)
@@ -291,7 +288,7 @@ function updateClipboard() {
     if (clipboardEmojis.length === 0) {
         clipboard.innerHTML = '<span style="color: #999;">복사한 이모지가 여기에 표시됩니다</span>';
     } else {
-        clipboard.textContent = clipboardEmojis.join(' ');
+        clipboard.textContent = clipboardEmojis.join(' '); // innerHTML 대신 textContent 사용
     }
 }
 
