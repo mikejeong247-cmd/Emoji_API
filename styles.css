@@ -30,7 +30,8 @@ body{
   font-size:28px; line-height:44px; width:44px; height:44px;
   border-radius:10px; border:1px solid var(--border); background:#fff;
   display:flex; align-items:center; justify-content:center;
-  cursor:pointer; transition:transform .06s ease; font-family:"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif;
+  cursor:pointer; transition:transform .06s ease;
+  font-family:"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif;
 }
 .emoji:active{ transform:scale(.96); }
 
