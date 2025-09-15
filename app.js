@@ -59,16 +59,22 @@ document.addEventListener('DOMContentLoaded', async () => {
         item[header] = values[index] || '';
       });
 
-      if (item.emoji && item.name_ko) {
-        if (item.code && (!item.emoji || item.emoji === '□')) {
-          item.emoji = unicodeToEmoji(item.code);
-        }
-        data.push(item);
-      }
-    }
-
-    return data;
+    if (item.emoji && item.name_ko) {
+  // 유니코드 코드가 있으면 이모지 생성
+  if (item.code && (!item.emoji || item.emoji === '□')) {
+    item.emoji = unicodeToEmoji(item.code);
   }
+  // 만약 여전히 이모지가 2글자 국가코드라면 깃발로 변환
+  function countryCodeToFlag(countryCode) {
+  if (countryCode.length !== 2) return countryCode;
+  
+  const codePoints = countryCode
+    .toUpperCase()
+    .split('')
+    .map(char => 0x1F1E6 + char.charCodeAt(0) - 'A'.charCodeAt(0));
+    
+  return String.fromCodePoint(...codePoints);
+}
 
   function parseCSVLine(line) {
     const result = [];
