@@ -24,6 +24,42 @@ const categoryIcons = {
     'Flags': '🏳️'
 };
 
+// 정규식으로 CSV 파싱
+function parseCSVWithRegex(csvText) {
+    const result = [];
+    const lines = csvText.trim().split('\n');
+    
+    // 헤더 제거
+    const dataLines = lines.slice(1);
+    
+    for (const line of dataLines) {
+        if (!line.trim()) continue;
+        
+        // CSV 정규식: 따옴표 안의 쉼표와 밖의 쉼표를 구분
+        const csvRegex = /(?:,|\n|^)("(?:(?:"")*[^"]*)*"|[^",\n]*|(?:\n|$))/g;
+        const fields = [];
+        let match;
+        
+        // 정규식으로 모든 필드 추출
+        while ((match = csvRegex.exec(line)) !== null) {
+            let field = match[1];
+            
+            // 따옴표 제거 및 이스케이프 처리
+            if (field.startsWith('"') && field.endsWith('"')) {
+                field = field.slice(1, -1).replace(/""/g, '"');
+            }
+            
+            fields.push(field.trim());
+        }
+        
+        if (fields.length >= 3) {
+            result.push(fields);
+        }
+    }
+    
+    return result;
+}
+
 // 유니코드를 이모지로 변환
 function convertUnicodeToEmoji(unicode) {
     if (!unicode || typeof unicode !== 'string') return '';
@@ -62,42 +98,30 @@ function countryCodeToFlag(code) {
     }
 }
 
-// 데이터 로드 - TSV 방식
+// 데이터 로드 - 정규식 파싱
 async function loadEmojis() {
     try {
-        console.log('TSV 데이터 로딩 시작...');
+        console.log('정규식 CSV 파싱 시작...');
         
-        // TSV URL로 변경
-        const response = await fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vTc7jzLftQBL-UUnwIHYR4yXHLp-fX3OKB0cE8l9tWKjCAr_Y_IpzO6P_aAbp6MZ_s2Qt26PC_71CVX/pub?gid=840637915&single=true&output=tsv');
-        const tsvText = await response.text();
+        // 기존 CSV URL 사용
+        const response = await fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vTc7jzLftQBL-UUnwIHYR4yXHLp-fX3OKB0cE8l9tWKjCAr_Y_IpzO6P_aAbp6MZ_s2Qt26PC_71CVX/pub?gid=840637915&single=true&output=csv');
+        const csvText = await response.text();
         
-        console.log('TSV 길이:', tsvText.length);
+        console.log('CSV 길이:', csvText.length);
+        console.log('CSV 첫 100자:', csvText.substring(0, 100));
         
-        const lines = tsvText.split('\n');
-        console.log('총 라인:', lines.length);
+        // 정규식으로 파싱
+        const parsedData = parseCSVWithRegex(csvText);
+        console.log('정규식 파싱 결과:', parsedData.length, '행');
         
-        // 헤더 확인
-        if (lines.length > 0) {
-            console.log('헤더:', lines[0]);
-        }
-        
-        const dataLines = lines.slice(1).filter(line => line.trim());
-        console.log('데이터 라인:', dataLines.length);
+        // 첫 몇 개 데이터 확인
+        console.log('파싱된 첫 3행:', parsedData.slice(0, 3));
         
         const emojiSet = new Set(); // 중복 방지
         allEmojis = [];
         
-        for (let i = 0; i < dataLines.length; i++) {
-            const line = dataLines[i];
-            // TSV는 탭으로 구분 - 훨씬 간단함!
-            const fields = line.split('\t');
-            
-            // 디버깅용 - 처음 몇 개만 출력
-            if (i < 3) {
-                console.log(`라인 ${i + 2}:`, fields);
-            }
-            
-            if (fields.length < 3) continue;
+        for (let i = 0; i < parsedData.length; i++) {
+            const fields = parsedData[i];
             
             const unicodeStr = fields[0] || '';
             const nameKo = fields[1] || '';
@@ -124,7 +148,7 @@ async function loadEmojis() {
                 
                 // 처음 몇 개 변환 결과 출력
                 if (allEmojis.length <= 5) {
-                    console.log(`변환 ${allEmojis.length}:`, emoji, nameKo);
+                    console.log(`변환 ${allEmojis.length}:`, emoji, nameKo, category);
                 }
             }
         }
@@ -132,7 +156,7 @@ async function loadEmojis() {
         console.log(`최종 결과: ${allEmojis.length}개 이모지`);
         
         if (allEmojis.length === 0) {
-            document.getElementById('emojiGrid').innerHTML = '<div class="loading">변환된 이모지가 없습니다.<br>TSV 데이터 확인 중...</div>';
+            document.getElementById('emojiGrid').innerHTML = '<div class="loading">정규식 파싱 후 변환된 이모지가 없습니다.</div>';
             return;
         }
         
@@ -140,8 +164,8 @@ async function loadEmojis() {
         displayEmojis();
         
     } catch (error) {
-        console.error('TSV 로드 오류:', error);
-        document.getElementById('emojiGrid').innerHTML = `<div class="loading">TSV 로드 실패: ${error.message}</div>`;
+        console.error('정규식 파싱 오류:', error);
+        document.getElementById('emojiGrid').innerHTML = `<div class="loading">정규식 파싱 실패: ${error.message}</div>`;
     }
 }
 
