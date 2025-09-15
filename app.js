@@ -13,26 +13,20 @@ document.addEventListener('DOMContentLoaded', () => {
   let currentCategory = 'all';
   let categories = new Map();
 
-  // Google Sheets에서 데이터 로드 (수정됨)
+  // Google Sheets에서 데이터 로드
   function loadEmojis() {
     grid.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; padding: 2rem;">이모지를 불러오는 중...</div>';
     
     const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTc7jzLftQBL-UUnwIHYR4yXHLp-fX3OKB0cE8l9tWKjCAr_Y_IpzO6P_aAbp6MZ_s2Qt26PC_71CVX/pub?gid=840637915&single=true&output=csv';
     
-    console.log('CSV URL로 직접 요청 시도:', csvUrl);
-    
     fetch(csvUrl)
     .then(response => {
-      console.log('응답 상태:', response.status, response.statusText);
       if (!response.ok) {
         throw new Error('HTTP error! status: ' + response.status);
       }
       return response.text();
     })
     .then(csvText => {
-      console.log('받은 CSV 데이터 길이:', csvText.length);
-      console.log('CSV 첫 100자:', csvText.substring(0, 100));
-      
       emojis = parseCSV(csvText);
       
       if (emojis.length === 0) {
@@ -51,18 +45,12 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // CSV 파싱 (디버깅 코드 추가)
+  // CSV 파싱
   function parseCSV(csvText) {
-    console.log('CSV 원본 데이터 (첫 500자):', csvText.substring(0, 500));
-    
     const lines = csvText.trim().split('\n');
-    console.log('총 라인 수:', lines.length);
-    
     if (lines.length < 2) return [];
 
     const headers = lines[0].split(',').map(h => h.replace(/"/g, '').trim());
-    console.log('헤더:', headers);
-    
     const data = [];
 
     for (let i = 1; i < lines.length; i++) {
@@ -70,17 +58,12 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!line) continue;
 
       const values = parseCSVLine(line);
-      if (values.length !== headers.length) {
-        console.log('길이 불일치 - 라인', i, ':', values.length, 'vs', headers.length);
-        continue;
-      }
+      if (values.length < headers.length) continue;
 
       const item = {};
       headers.forEach((header, index) => {
         item[header] = values[index] || '';
       });
-
-      console.log('파싱된 아이템 (라인', i, '):', item);
 
       if (item.emoji && item.name_ko) {
         if (item.code && (!item.emoji || item.emoji === '□')) {
@@ -90,12 +73,9 @@ document.addEventListener('DOMContentLoaded', () => {
           item.emoji = countryCodeToFlag(item.emoji);
         }
         data.push(item);
-      } else {
-        console.log('조건 불충족 - emoji:', item.emoji, 'name_ko:', item.name_ko);
       }
     }
 
-    console.log('최종 파싱된 데이터 개수:', data.length);
     return data;
   }
 
@@ -160,9 +140,11 @@ document.addEventListener('DOMContentLoaded', () => {
     emojis.forEach(emoji => {
       const category = emoji.category || 'others';
       if (!categoryMap.has(category)) {
+        // 카테고리별 대표 이모지 선택
+        const representativeEmoji = getRepresentativeEmoji(category, emoji.emoji);
         categoryMap.set(category, {
           name: getCategoryName(category),
-          emoji: getCategoryEmoji(category),
+          emoji: representativeEmoji,
           count: 0
         });
       }
@@ -177,42 +159,40 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function getCategoryName(category) {
-    const lang = navigator.language.toLowerCase().split('-')[0];
+    const lang = navigator.language.toLowerCase();
+    const isKorean = lang.startsWith('ko');
     
     const categoryNames = {
-      'all': { 'ko': '전체', 'default': 'All' },
-      'smileys': { 'ko': '스마일리', 'default': 'Smileys' },
-      'people': { 'ko': '사람', 'default': 'People' },
-      'animals': { 'ko': '동물', 'default': 'Animals' },
-      'food': { 'ko': '음식', 'default': 'Food' },
-      'travel': { 'ko': '여행', 'default': 'Travel' },
-      'activities': { 'ko': '활동', 'default': 'Activities' },
-      'objects': { 'ko': '사물', 'default': 'Objects' },
-      'symbols': { 'ko': '기호', 'default': 'Symbols' },
-      'flags': { 'ko': '깃발', 'default': 'Flags' },
-      'nature': { 'ko': '자연', 'default': 'Nature' }
+      'Activities': isKorean ? '활동' : 'Activities',
+      'Animals & Nature': isKorean ? '동물' : 'Animals & Nature',
+      'Component': isKorean ? '구성요소' : 'Component',
+      'Flags': isKorean ? '깃발' : 'Flags',
+      'Food & Drink': isKorean ? '음식' : 'Food & Drink',
+      'Objects': isKorean ? '사물' : 'Objects',
+      'People & Body': isKorean ? '사람' : 'People & Body',
+      'Smileys & Emotion': isKorean ? '스마일리' : 'Smileys & Emotion',
+      'Symbols': isKorean ? '기호' : 'Symbols',
+      'Travel & Places': isKorean ? '여행' : 'Travel & Places'
     };
 
-    const categoryData = categoryNames[category];
-    if (!categoryData) return category;
-    
-    return categoryData[lang] || categoryData['default'];
+    return categoryNames[category] || category;
   }
 
-  function getCategoryEmoji(category) {
-    const categoryEmojis = {
-      'smileys': '😀',
-      'people': '👤',
-      'animals': '🐶',
-      'food': '🍎',
-      'travel': '🚗',
-      'activities': '⚽',
-      'objects': '💡',
-      'symbols': '💯',
-      'flags': '🏳️',
-      'nature': '🌿'
+  function getRepresentativeEmoji(category, firstEmoji) {
+    const representatives = {
+      'Activities': '⚽',
+      'Animals & Nature': '🐶',
+      'Component': '🔧',
+      'Flags': '🏳️',
+      'Food & Drink': '🍎',
+      'Objects': '💡',
+      'People & Body': '👤',
+      'Smileys & Emotion': '😀',
+      'Symbols': '💯',
+      'Travel & Places': '🚗'
     };
-    return categoryEmojis[category] || '📁';
+    
+    return representatives[category] || firstEmoji || '📁';
   }
 
   function renderCategories() {
@@ -297,22 +277,30 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function copyEmoji(emoji) {
-    navigator.clipboard.writeText(emoji.emoji).then(() => {
-      addToHistory(emoji);
-      showToast(emoji.emoji + ' 복사됨!');
-    }).catch(error => {
-      const textArea = document.createElement('textarea');
-      textArea.value = emoji.emoji;
-      textArea.style.position = 'fixed';
-      textArea.style.left = '-9999px';
-      document.body.appendChild(textArea);
-      textArea.select();
-      document.execCommand('copy');
-      document.body.removeChild(textArea);
-      
-      addToHistory(emoji);
-      showToast(emoji.emoji + ' 복사됨!');
-    });
+    try {
+      navigator.clipboard.writeText(emoji.emoji).then(() => {
+        addToHistory(emoji);
+        showToast(emoji.emoji + ' 복사됨!');
+      }).catch(() => {
+        fallbackCopy(emoji);
+      });
+    } catch (error) {
+      fallbackCopy(emoji);
+    }
+  }
+
+  function fallbackCopy(emoji) {
+    const textArea = document.createElement('textarea');
+    textArea.value = emoji.emoji;
+    textArea.style.position = 'fixed';
+    textArea.style.left = '-9999px';
+    document.body.appendChild(textArea);
+    textArea.select();
+    document.execCommand('copy');
+    document.body.removeChild(textArea);
+    
+    addToHistory(emoji);
+    showToast(emoji.emoji + ' 복사됨!');
   }
 
   function addToHistory(emoji) {
@@ -358,20 +346,28 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   window.copyFromHistory = function(text) {
-    navigator.clipboard.writeText(text).then(() => {
-      showToast(text + ' 복사됨!');
-    }).catch(error => {
-      const textArea = document.createElement('textarea');
-      textArea.value = text;
-      textArea.style.position = 'fixed';
-      textArea.style.left = '-9999px';
-      document.body.appendChild(textArea);
-      textArea.select();
-      document.execCommand('copy');
-      document.body.removeChild(textArea);
-      showToast(text + ' 복사됨!');
-    });
+    try {
+      navigator.clipboard.writeText(text).then(() => {
+        showToast(text + ' 복사됨!');
+      }).catch(() => {
+        fallbackCopyText(text);
+      });
+    } catch (error) {
+      fallbackCopyText(text);
+    }
   };
+
+  function fallbackCopyText(text) {
+    const textArea = document.createElement('textarea');
+    textArea.value = text;
+    textArea.style.position = 'fixed';
+    textArea.style.left = '-9999px';
+    document.body.appendChild(textArea);
+    textArea.select();
+    document.execCommand('copy');
+    document.body.removeChild(textArea);
+    showToast(text + ' 복사됨!');
+  }
 
   function showToast(message) {
     toast.textContent = message;
