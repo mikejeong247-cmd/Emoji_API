@@ -3,7 +3,59 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>이모지 복사 사이트</title>
+    
+    <!-- SEO 메타 태그 -->
+    <title>이모지 복사 사이트 - 1890개 이모지 무료 복사, 카테고리별 정리</title>
+    <meta name="description" content="1890개 이모지를 카테고리별로 정리한 무료 이모지 복사 사이트. 스마일리, 동물, 음식, 깃발 등 다양한 이모지를 원클릭으로 복사하세요.">
+    <meta name="keywords" content="이모지, emoji, 복사, 카테고리, 스마일리, 감정표현, 무료, 이모티콘">
+    <meta name="author" content="이모지 복사 사이트">
+    <meta name="robots" content="index, follow">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://your-domain.com/">
+    <meta property="og:title" content="이모지 복사 사이트 - 1890개 이모지 무료 복사">
+    <meta property="og:description" content="카테고리별로 정리된 1890개 이모지를 원클릭으로 복사하세요. 스마일리, 동물, 음식, 깃발 등 다양한 이모지 제공.">
+    <meta property="og:image" content="https://your-domain.com/og-image.png">
+    <meta property="og:locale" content="ko_KR">
+    
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://your-domain.com/">
+    <meta property="twitter:title" content="이모지 복사 사이트 - 1890개 이모지 무료 복사">
+    <meta property="twitter:description" content="카테고리별로 정리된 1890개 이모지를 원클릭으로 복사하세요.">
+    <meta property="twitter:image" content="https://your-domain.com/og-image.png">
+    
+    <!-- 추가 SEO -->
+    <meta name="theme-color" content="#667eea">
+    <link rel="canonical" href="https://your-domain.com/">
+    
+    <!-- 파비콘 -->
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    
+    <!-- 구조화된 데이터 (JSON-LD) -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "이모지 복사 사이트",
+        "description": "1890개 이모지를 카테고리별로 정리한 무료 이모지 복사 사이트",
+        "url": "https://your-domain.com/",
+        "applicationCategory": "Utility",
+        "operatingSystem": "Any",
+        "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "KRW"
+        },
+        "author": {
+            "@type": "Organization",
+            "name": "이모지 복사 사이트"
+        }
+    }
+    </script>
+    
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -12,23 +64,23 @@
         <p class="subtitle">원하는 이모지를 클릭해서 복사하세요!</p>
     </header>
 
-    <div class="container">
-        <div class="clipboard-section">
+    <main class="container">
+        <section class="clipboard-section">
             <div class="clipboard-header">
-                <h3 class="clipboard-title">📋 클립보드</h3>
+                <h2 class="clipboard-title">📋 클립보드</h2>
                 <button class="clear-clipboard" onclick="clearClipboard()">지우기</button>
             </div>
             <div class="clipboard-content" id="clipboard"></div>
-        </div>
+        </section>
 
-        <div class="categories" id="categories">
+        <nav class="categories" id="categories" aria-label="이모지 카테고리">
             <!-- 카테고리 버튼들이 여기에 동적으로 생성됩니다 -->
-        </div>
+        </nav>
 
-        <div class="emoji-grid" id="emojiGrid">
+        <section class="emoji-grid" id="emojiGrid" aria-label="이모지 목록">
             <div class="loading">이모지를 불러오는 중...</div>
-        </div>
-    </div>
+        </section>
+    </main>
 
     <footer>
         <p>&copy; 2024 이모지 복사 사이트. 모든 권리 보유.</p>
