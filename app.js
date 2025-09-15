@@ -104,6 +104,12 @@ class EmojiPicker {
         item[header] = value;
       });
 
+      // 이모지가 비어있거나 네모로 표시되는 경우 유니코드에서 생성
+      if (item.code && (!item.emoji || this.isSquareEmoji(item.emoji))) {
+        item.emoji = this.unicodeToEmoji(item.code);
+        console.log(`유니코드 ${item.code}를 이모지로 변환: ${item.emoji}`);
+      }
+
       // 필수 필드 검증
       if (item.emoji && item.name_ko) {
         data.push(item);
@@ -112,6 +118,36 @@ class EmojiPicker {
 
     console.log(`총 ${data.length}개의 이모지 데이터 로드됨`);
     return data;
+  }
+
+  // 네모 이모지 감지 (□, ▢, 등)
+  isSquareEmoji(emoji) {
+    const squares = ['□', '▢', '◻', '▫', '⬜', '⬛', '◼', '◽', '◾', '▪', '▫'];
+    return squares.includes(emoji) || emoji === '' || /^\s*$/.test(emoji);
+  }
+
+  // 유니코드 코드를 실제 이모지로 변환
+  unicodeToEmoji(code) {
+    if (!code) return '';
+    
+    try {
+      // 여러 형식 지원: 1F600, U+1F600, 0x1F600
+      let cleanCode = code.replace(/^(U\+|0x)/i, '');
+      
+      // 멀티 코드포인트 지원 (예: 1F468-200D-1F4BC)
+      if (cleanCode.includes('-')) {
+        const codePoints = cleanCode.split('-');
+        return String.fromCodePoint(...codePoints.map(cp => parseInt(cp, 16)));
+      } else {
+        // 단일 코드포인트
+        const codePoint = parseInt(cleanCode, 16);
+        if (isNaN(codePoint)) return '';
+        return String.fromCodePoint(codePoint);
+      }
+    } catch (error) {
+      console.warn(`유니코드 변환 실패: ${code}`, error);
+      return '';
+    }
   }
 
   parseCSVLine(line) {
@@ -395,16 +431,14 @@ class EmojiPicker {
     return card;
   }
 
-  async copyEmoji(emoji, cardElement) {
+  // 이모지 직접 복사 (클릭 시)
+  async copyEmojiDirect(emoji) {
     try {
-      await navigator.clipboard.writeText(emoji.emoji);
+      await this.copyToClipboardDirect(emoji.emoji);
       
-      // 시각적 피드백
-      cardElement.classList.add('copied');
-      setTimeout(() => {
-        cardElement.classList.remove('copied');
-      }, 1500);
-
+      // 복사 히스토리에 추가
+      this.addToCopyHistory(emoji);
+      
       // 토스트 메시지
       this.showToast(`${emoji.emoji} 복사됨!`);
       
@@ -415,6 +449,216 @@ class EmojiPicker {
       console.error('클립보드 복사 실패:', error);
       this.showToast('복사에 실패했습니다');
     }
+  }
+
+  async copyToClipboardDirect(text) {
+    // 방법 1: 최신 Clipboard API 시도
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(text);
+      return;
+    }
+    
+    // 방법 2: 구형 브라우저 폴백
+    const textArea = document.createElement('textarea');
+    textArea.value = text;
+    textArea.style.position = 'fixed';
+    textArea.style.left = '-999999px';
+    textArea.style.top = '-999999px';
+    document.body.appendChild(textArea);
+    
+    textArea.focus();
+    textArea.select();
+    
+    const successful = document.execCommand('copy');
+    document.body.removeChild(textArea);
+    
+    if (!successful) {
+      throw new Error('복사 실패');
+    }
+  }
+
+  createCopySidebar() {
+    // 메인 콘텐츠에 클래스 추가
+    const main = document.querySelector('main');
+    if (main) {
+      main.classList.add('main-content');
+    }
+
+    // 사이드바 토글 버튼
+    this.sidebarToggle = document.createElement('button');
+    this.sidebarToggle.className = 'sidebar-toggle';
+    this.sidebarToggle.innerHTML = '📋';
+    this.sidebarToggle.title = '복사 히스토리';
+    this.sidebarToggle.setAttribute('aria-label', '복사 히스토리 열기');
+    
+    // 사이드바
+    this.copySidebar = document.createElement('div');
+    this.copySidebar.className = 'copy-sidebar';
+    this.copySidebar.setAttribute('role', 'complementary');
+    this.copySidebar.setAttribute('aria-label', '복사 히스토리');
+
+    this.copySidebar.innerHTML = `
+      <div class="copy-sidebar-header">
+        <h3 class="copy-sidebar-title">복사 히스토리</h3>
+        <button class="copy-sidebar-toggle" aria-label="사이드바 닫기">✕</button>
+      </div>
+      <div class="copy-sidebar-content">
+        <div class="copy-history">
+          <div class="copy-empty">
+            <span class="copy-empty-emoji">📋</span>
+            <div>아직 복사한 이모지가 없습니다</div>
+            <small>이모지를 클릭해서 복사해보세요!</small>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(this.sidebarToggle);
+    document.body.appendChild(this.copySidebar);
+
+    // 이벤트 리스너
+    this.sidebarToggle.addEventListener('click', () => {
+      this.toggleSidebar();
+    });
+
+    this.copySidebar.querySelector('.copy-sidebar-toggle').addEventListener('click', () => {
+      this.closeSidebar();
+    });
+
+    // ESC 키로 사이드바 닫기
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && this.copySidebar.classList.contains('open')) {
+        this.closeSidebar();
+      }
+    });
+  }
+
+  toggleSidebar() {
+    if (this.copySidebar.classList.contains('open')) {
+      this.closeSidebar();
+    } else {
+      this.openSidebar();
+    }
+  }
+
+  openSidebar() {
+    this.copySidebar.classList.add('open');
+    this.sidebarToggle.classList.add('active');
+    document.querySelector('.main-content')?.classList.add('sidebar-open');
+    
+    // 접근성 알림
+    this.announceToScreenReader('복사 히스토리가 열렸습니다');
+  }
+
+  closeSidebar() {
+    this.copySidebar.classList.remove('open');
+    this.sidebarToggle.classList.remove('active');
+    document.querySelector('.main-content')?.classList.remove('sidebar-open');
+  }
+
+  addToCopyHistory(emoji) {
+    // 중복 제거 (같은 이모지가 있으면 제거)
+    this.copyHistory = this.copyHistory.filter(item => item.emoji.emoji !== emoji.emoji);
+    
+    // 새 항목을 맨 앞에 추가
+    this.copyHistory.unshift({
+      emoji: emoji,
+      timestamp: new Date(),
+      id: Date.now()
+    });
+
+    // 최대 개수 제한
+    if (this.copyHistory.length > this.maxHistoryItems) {
+      this.copyHistory = this.copyHistory.slice(0, this.maxHistoryItems);
+    }
+
+    // UI 업데이트
+    this.renderCopyHistory();
+  }
+
+  renderCopyHistory() {
+    const historyContainer = this.copySidebar.querySelector('.copy-history');
+    
+    if (this.copyHistory.length === 0) {
+      historyContainer.innerHTML = `
+        <div class="copy-empty">
+          <span class="copy-empty-emoji">📋</span>
+          <div>아직 복사한 이모지가 없습니다</div>
+          <small>이모지를 클릭해서 복사해보세요!</small>
+        </div>
+      `;
+      return;
+    }
+
+    historyContainer.innerHTML = this.copyHistory.map((item, index) => {
+      const timeAgo = this.getTimeAgo(item.timestamp);
+      const isLatest = index === 0;
+      
+      return `
+        <div class="copy-item ${isLatest ? 'latest' : ''}" data-id="${item.id}">
+          <div class="copy-item-header">
+            <span class="copy-item-emoji">${item.emoji.emoji}</span>
+            <div class="copy-item-names">
+              <div class="copy-item-name-ko">${item.emoji.name_ko}</div>
+              <div class="copy-item-name-en">${item.emoji.name_en}</div>
+            </div>
+            <div class="copy-item-time">${timeAgo}</div>
+          </div>
+          <div class="copy-item-actions">
+            <button class="copy-item-btn copy-emoji-btn" data-emoji="${item.emoji.emoji}">
+              이모지 복사
+            </button>
+            <button class="copy-item-btn copy-name-btn" data-name="${item.emoji.name_ko}">
+              이름 복사
+            </button>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    // 이벤트 리스너 추가
+    historyContainer.querySelectorAll('.copy-emoji-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const emoji = btn.dataset.emoji;
+        this.copyToClipboardDirect(emoji);
+        this.showToast(`${emoji} 복사됨!`);
+      });
+    });
+
+    historyContainer.querySelectorAll('.copy-name-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const name = btn.dataset.name;
+        this.copyToClipboardDirect(name);
+        this.showToast(`"${name}" 복사됨!`);
+      });
+    });
+
+    // 아이템 클릭으로도 복사
+    historyContainer.querySelectorAll('.copy-item').forEach(item => {
+      item.addEventListener('click', (e) => {
+        if (e.target.classList.contains('copy-item-btn')) return;
+        
+        const emoji = item.querySelector('.copy-item-emoji').textContent;
+        this.copyToClipboardDirect(emoji);
+        this.showToast(`${emoji} 복사됨!`);
+      });
+    });
+  }
+
+  getTimeAgo(timestamp) {
+    const now = new Date();
+    const diff = now - timestamp;
+    const seconds = Math.floor(diff / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
+
+    if (days > 0) return `${days}일 전`;
+    if (hours > 0) return `${hours}시간 전`;
+    if (minutes > 0) return `${minutes}분 전`;
+    return '방금 전';
   }
 
   updateMoreButton() {
