@@ -1,395 +1,254 @@
-document.addEventListener('DOMContentLoaded', () => {
-  console.log('JavaScript 파일 로드 성공');
-  
-  const grid = document.getElementById('grid');
-  const moreButton = document.getElementById('more');
-  const toast = document.getElementById('toast');
-  
-  let emojis = [];
-  let filteredEmojis = [];
-  let displayedCount = 0;
-  const itemsPerPage = 100;
-  let copyHistory = [];
-  let currentCategory = 'all';
-  let categories = new Map();
+let allEmojis = [];
+let clipboardEmojis = [];
+let currentCategory = 'all';
 
-  // Google Sheets에서 데이터 로드
-  function loadEmojis() {
-    grid.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; padding: 2rem;">이모지를 불러오는 중...</div>';
-    
-    const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTc7jzLftQBL-UUnwIHYR4yXHLp-fX3OKB0cE8l9tWKjCAr_Y_IpzO6P_aAbp6MZ_s2Qt26PC_71CVX/pub?gid=840637915&single=true&output=csv';
-    
-    fetch(csvUrl)
-    .then(response => {
-      if (!response.ok) {
-        throw new Error('HTTP error! status: ' + response.status);
-      }
-      return response.text();
-    })
-    .then(csvText => {
-      emojis = parseCSV(csvText);
-      
-      if (emojis.length === 0) {
-        throw new Error('파싱된 데이터가 없습니다.');
-      }
-      
-      processCategories();
-      console.log('Google Sheets 데이터 로드 완료:', emojis.length, '개');
-      
-      renderCategories();
-      filterAndDisplayEmojis();
-    })
-    .catch(error => {
-      console.error('Google Sheets 로드 오류:', error);
-      grid.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; padding: 2rem; color: red;">Google Sheets 데이터를 불러올 수 없습니다.<br>' + error.message + '</div>';
-    });
-  }
+// 카테고리별 대표 이모지
+const categoryIcons = {
+    '스마일리 및 감정': '😀',
+    '사람 및 신체': '👤',
+    '동물 및 자연': '🐶',
+    '음식 및 음료': '🍎',
+    '여행 및 장소': '🌍',
+    '활동': '⚽',
+    '사물': '📱',
+    '기호': '❤️',
+    '깃발': '🏳️',
+    'Smileys & Emotion': '😀',
+    'People & Body': '👤',
+    'Animals & Nature': '🐶',
+    'Food & Drink': '🍎',
+    'Travel & Places': '🌍',
+    'Activities': '⚽',
+    'Objects': '📱',
+    'Symbols': '❤️',
+    'Flags': '🏳️'
+};
 
-  // CSV 파싱
-  function parseCSV(csvText) {
-    const lines = csvText.trim().split('\n');
-    if (lines.length < 2) return [];
-
-    const headers = lines[0].split(',').map(h => h.replace(/"/g, '').trim());
-    const data = [];
-
-    for (let i = 1; i < lines.length; i++) {
-      const line = lines[i].trim();
-      if (!line) continue;
-
-      const values = parseCSVLine(line);
-      if (values.length < headers.length) continue;
-
-      const item = {};
-      headers.forEach((header, index) => {
-        item[header] = values[index] || '';
-      });
-
-      if (item.emoji && item.name_ko) {
-        if (item.code && (!item.emoji || item.emoji === '□')) {
-          item.emoji = unicodeToEmoji(item.code);
-        }
-        if (item.emoji && item.emoji.length === 2 && /^[A-Z]{2}$/.test(item.emoji)) {
-          item.emoji = countryCodeToFlag(item.emoji);
-        }
-        data.push(item);
-      }
-    }
-
-    return data;
-  }
-
-  function parseCSVLine(line) {
-    const result = [];
-    let current = '';
-    let inQuotes = false;
-    
-    for (let i = 0; i < line.length; i++) {
-      const char = line[i];
-      if (char === '"') {
-        inQuotes = !inQuotes;
-      } else if (char === ',' && !inQuotes) {
-        result.push(current.trim());
-        current = '';
-      } else {
-        current += char;
-      }
-    }
-    result.push(current.trim());
-    return result;
-  }
-
-  function unicodeToEmoji(code) {
-    try {
-      const cleanCode = code.replace(/^(U\+|0x)/i, '');
-      if (cleanCode.includes('-')) {
-        const codePoints = cleanCode.split('-');
-        return String.fromCodePoint(...codePoints.map(cp => parseInt(cp, 16)));
-      } else {
-        const codePoint = parseInt(cleanCode, 16);
-        return isNaN(codePoint) ? '' : String.fromCodePoint(codePoint);
-      }
-    } catch (error) {
-      return '';
-    }
-  }
-
-  function countryCodeToFlag(countryCode) {
-    if (countryCode.length !== 2) return countryCode;
-    
+// 국가 코드를 깃발 이모지로 변환
+function countryCodeToFlag(countryCode) {
+    if (!countryCode || countryCode.length !== 2) return '';
     const codePoints = countryCode
-      .toUpperCase()
-      .split('')
-      .map(char => 0x1F1E6 + char.charCodeAt(0) - 'A'.charCodeAt(0));
-      
+        .toUpperCase()
+        .split('')
+        .map(char => 127397 + char.charCodeAt());
     return String.fromCodePoint(...codePoints);
-  }
+}
 
-  // 카테고리 처리
-  function processCategories() {
-    categories.clear();
-    
-    categories.set('all', {
-      name: '전체',
-      emoji: '🎯',
-      count: emojis.length
-    });
+// 데이터 로드
+async function loadEmojis() {
+    try {
+        const response = await fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vTc7jzLftQBL-UUnwIHYR4yXHLp-fX3OKB0cE8l9tWKjCAr_Y_IpzO6P_aAbp6MZ_s2Qt26PC_71CVX/pub?gid=840637915&single=true&output=csv');
+        const csvText = await response.text();
+        
+        const lines = csvText.split('\n');
+        const headers = lines[0].split(',');
+        
+        allEmojis = lines.slice(1)
+            .filter(line => line.trim())
+            .map(line => {
+                const values = line.split(',');
+                const emoji = values[0]?.trim() || '';
+                const name_ko = values[1]?.trim() || '';
+                const category = values[2]?.trim() || '';
+                const code = values[3]?.trim() || '';
+                
+                // 국가 코드가 있으면 깃발 이모지로 변환
+                let displayEmoji = emoji;
+                if (code && code.length === 2 && /^[A-Z]{2}$/.test(code)) {
+                    displayEmoji = countryCodeToFlag(code);
+                }
+                
+                return {
+                    emoji: displayEmoji,
+                    name_ko,
+                    category,
+                    code
+                };
+            })
+            .filter(item => item.emoji);
 
-    const categoryMap = new Map();
-    
-    emojis.forEach(emoji => {
-      const category = emoji.category || 'others';
-      if (!categoryMap.has(category)) {
-        // 카테고리별 대표 이모지 선택
-        const representativeEmoji = getRepresentativeEmoji(category, emoji.emoji);
-        categoryMap.set(category, {
-          name: getCategoryName(category),
-          emoji: representativeEmoji,
-          count: 0
-        });
-      }
-      categoryMap.get(category).count++;
-    });
-
-    [...categoryMap.entries()]
-      .sort(([a], [b]) => a.localeCompare(b))
-      .forEach(([key, value]) => {
-        categories.set(key, value);
-      });
-  }
-
-  function getCategoryName(category) {
-    const lang = navigator.language.toLowerCase();
-    const isKorean = lang.startsWith('ko');
-    
-    const categoryNames = {
-      'Activities': isKorean ? '활동' : 'Activities',
-      'Animals & Nature': isKorean ? '동물' : 'Animals & Nature',
-      'Component': isKorean ? '구성요소' : 'Component',
-      'Flags': isKorean ? '깃발' : 'Flags',
-      'Food & Drink': isKorean ? '음식' : 'Food & Drink',
-      'Objects': isKorean ? '사물' : 'Objects',
-      'People & Body': isKorean ? '사람' : 'People & Body',
-      'Smileys & Emotion': isKorean ? '스마일리' : 'Smileys & Emotion',
-      'Symbols': isKorean ? '기호' : 'Symbols',
-      'Travel & Places': isKorean ? '여행' : 'Travel & Places'
-    };
-
-    return categoryNames[category] || category;
-  }
-
-  function getRepresentativeEmoji(category, firstEmoji) {
-    const representatives = {
-      'Activities': '⚽',
-      'Animals & Nature': '🐶',
-      'Component': '🔧',
-      'Flags': '🏳️',
-      'Food & Drink': '🍎',
-      'Objects': '💡',
-      'People & Body': '👤',
-      'Smileys & Emotion': '😀',
-      'Symbols': '💯',
-      'Travel & Places': '🚗'
-    };
-    
-    return representatives[category] || firstEmoji || '📁';
-  }
-
-  function renderCategories() {
-    const chipsContainer = document.getElementById('chips');
-    if (!chipsContainer) return;
-    
-    chipsContainer.innerHTML = '';
-    
-    categories.forEach((category, key) => {
-      const chip = document.createElement('button');
-      chip.className = 'chip';
-      chip.dataset.category = key;
-      
-      if (key === currentCategory) {
-        chip.classList.add('active');
-      }
-
-      chip.innerHTML = '<span class="chip-emoji">' + category.emoji + '</span><span>' + category.name + '</span><span class="chip-count">' + category.count + '</span>';
-
-      chip.addEventListener('click', () => {
-        selectCategory(key);
-      });
-
-      chipsContainer.appendChild(chip);
-    });
-  }
-
-  function selectCategory(category) {
-    const prevActive = document.querySelector('.chip.active');
-    if (prevActive) {
-      prevActive.classList.remove('active');
+        console.log(`총 ${allEmojis.length}개의 이모지를 로드했습니다.`);
+        createCategories();
+        displayEmojis();
+    } catch (error) {
+        console.error('이모지 데이터 로드 실패:', error);
+        const emojiGrid = document.getElementById('emojiGrid');
+        if (emojiGrid) {
+            emojiGrid.innerHTML = '<div class="loading">이모지 로드에 실패했습니다.</div>';
+        }
     }
+}
 
-    const newActive = document.querySelector('[data-category="' + category + '"]');
-    if (newActive) {
-      newActive.classList.add('active');
+// 카테고리 생성
+function createCategories() {
+    const categories = [...new Set(allEmojis.map(emoji => emoji.category))].filter(Boolean);
+    const categoriesContainer = document.getElementById('categories');
+    
+    if (!categoriesContainer) {
+        console.error('categories 요소를 찾을 수 없습니다.');
+        return;
     }
+    
+    // 전체 버튼
+    categoriesContainer.innerHTML = '<button class="category-btn active" onclick="filterCategory(\'all\')">🌟 전체</button>';
+    
+    categories.forEach(category => {
+        const icon = categoryIcons[category] || '📁';
+        const button = document.createElement('button');
+        button.className = 'category-btn';
+        button.onclick = () => filterCategory(category);
+        button.textContent = `${icon} ${category}`;
+        categoriesContainer.appendChild(button);
+    });
+}
 
+// 카테고리 필터
+function filterCategory(category) {
     currentCategory = category;
-    filterAndDisplayEmojis();
-  }
-
-  function filterAndDisplayEmojis() {
-    if (currentCategory === 'all') {
-      filteredEmojis = emojis;
-    } else {
-      filteredEmojis = emojis.filter(emoji => emoji.category === currentCategory);
-    }
-
-    displayedCount = 0;
-    grid.innerHTML = '';
-    displayEmojis();
-  }
-
-  function displayEmojis() {
-    if (displayedCount === 0) {
-      grid.innerHTML = '';
-    }
-
-    const start = displayedCount;
-    const end = Math.min(start + itemsPerPage, filteredEmojis.length);
-
-    for (let i = start; i < end; i++) {
-      const emoji = filteredEmojis[i];
-      const card = createEmojiCard(emoji);
-      grid.appendChild(card);
-    }
-
-    displayedCount = end;
-    updateMoreButton();
-  }
-
-  function createEmojiCard(emoji) {
-    const card = document.createElement('button');
-    card.className = 'emoji-card';
-    card.title = emoji.name_ko;
     
-    card.innerHTML = '<div class="emoji-symbol">' + emoji.emoji + '</div>';
-
-    card.addEventListener('click', () => copyEmoji(emoji));
-    return card;
-  }
-
-  function copyEmoji(emoji) {
-    try {
-      navigator.clipboard.writeText(emoji.emoji).then(() => {
-        addToHistory(emoji);
-        showToast(emoji.emoji + ' 복사됨!');
-      }).catch(() => {
-        fallbackCopy(emoji);
-      });
-    } catch (error) {
-      fallbackCopy(emoji);
-    }
-  }
-
-  function fallbackCopy(emoji) {
-    const textArea = document.createElement('textarea');
-    textArea.value = emoji.emoji;
-    textArea.style.position = 'fixed';
-    textArea.style.left = '-9999px';
-    document.body.appendChild(textArea);
-    textArea.select();
-    document.execCommand('copy');
-    document.body.removeChild(textArea);
-    
-    addToHistory(emoji);
-    showToast(emoji.emoji + ' 복사됨!');
-  }
-
-  function addToHistory(emoji) {
-    copyHistory = copyHistory.filter(item => item.emoji.emoji !== emoji.emoji);
-    copyHistory.unshift({
-      emoji: emoji,
-      timestamp: new Date()
+    // 활성 버튼 스타일 업데이트
+    document.querySelectorAll('.category-btn').forEach(btn => {
+        btn.classList.remove('active');
     });
     
-    if (copyHistory.length > 10) {
-      copyHistory = copyHistory.slice(0, 10);
+    // event 객체가 있을 때만 target 사용
+    if (window.event && window.event.target) {
+        window.event.target.classList.add('active');
+    } else {
+        // 직접 호출된 경우, 해당 카테고리 버튼 찾아서 활성화
+        const buttons = document.querySelectorAll('.category-btn');
+        buttons.forEach(btn => {
+            if ((category === 'all' && btn.textContent.includes('전체')) || 
+                btn.textContent.includes(category)) {
+                btn.classList.add('active');
+            }
+        });
     }
     
-    updateClipboardDisplay();
-  }
+    displayEmojis();
+}
 
-  function updateClipboardDisplay() {
-    const clipboardContent = document.getElementById('clipboardContent');
-    if (!clipboardContent) return;
-
-    if (copyHistory.length === 0) {
-      clipboardContent.innerHTML = '<div class="clipboard-empty">복사한 이모지가 표시됩니다.</div>';
-      return;
+// 이모지 표시
+function displayEmojis() {
+    const grid = document.getElementById('emojiGrid');
+    if (!grid) {
+        console.error('emojiGrid 요소를 찾을 수 없습니다.');
+        return;
     }
-
-    clipboardContent.innerHTML = copyHistory.map((item, index) => {
-      const timeAgo = getTimeAgo(item.timestamp);
-      
-      return '<div class="clipboard-item" onclick="copyFromHistory(\'' + item.emoji.emoji + '\')" title="' + item.emoji.name_ko + '"><span class="clipboard-item-emoji">' + item.emoji.emoji + '</span><span>' + item.emoji.name_ko + '</span><span class="clipboard-item-time">' + timeAgo + '</span></div>';
-    }).join('');
-  }
-
-  function getTimeAgo(timestamp) {
-    const now = new Date();
-    const diff = now - timestamp;
-    const seconds = Math.floor(diff / 1000);
-    const minutes = Math.floor(seconds / 60);
-    const hours = Math.floor(minutes / 60);
-
-    if (hours > 0) return hours + '시간 전';
-    if (minutes > 0) return minutes + '분 전';
-    return '방금 전';
-  }
-
-  window.copyFromHistory = function(text) {
-    try {
-      navigator.clipboard.writeText(text).then(() => {
-        showToast(text + ' 복사됨!');
-      }).catch(() => {
-        fallbackCopyText(text);
-      });
-    } catch (error) {
-      fallbackCopyText(text);
+    
+    let filteredEmojis = currentCategory === 'all' 
+        ? allEmojis 
+        : allEmojis.filter(emoji => emoji.category === currentCategory);
+    
+    if (filteredEmojis.length === 0) {
+        grid.innerHTML = '<div class="loading">이모지가 없습니다.</div>';
+        return;
     }
-  };
+    
+    grid.innerHTML = filteredEmojis.map(emoji => 
+        `<div class="emoji-item" onclick="copyEmoji('${emoji.emoji}', '${emoji.name_ko}')">
+            <span class="emoji">${emoji.emoji}</span>
+        </div>`
+    ).join('');
+}
 
-  function fallbackCopyText(text) {
+// 이모지 복사 (이모지만 복사)
+function copyEmoji(emoji, name) {
+    // 클립보드에 이모지만 추가
+    clipboardEmojis.push(emoji);
+    updateClipboard();
+    
+    // 클립보드에 이모지만 복사
+    if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(emoji).then(() => {
+            showToast(`${emoji} 복사됨!`);
+        }).catch(() => {
+            fallbackCopy(emoji);
+        });
+    } else {
+        fallbackCopy(emoji);
+    }
+}
+
+// 폴백 복사 방법
+function fallbackCopy(text) {
     const textArea = document.createElement('textarea');
     textArea.value = text;
     textArea.style.position = 'fixed';
-    textArea.style.left = '-9999px';
+    textArea.style.opacity = '0';
     document.body.appendChild(textArea);
+    textArea.focus();
     textArea.select();
-    document.execCommand('copy');
+    
+    try {
+        document.execCommand('copy');
+        showToast(`${text} 복사됨!`);
+    } catch (err) {
+        console.error('복사 실패:', err);
+        showToast('복사에 실패했습니다.');
+    }
+    
     document.body.removeChild(textArea);
-    showToast(text + ' 복사됨!');
-  }
+}
 
-  function showToast(message) {
+// 클립보드 업데이트
+function updateClipboard() {
+    const clipboard = document.getElementById('clipboard');
+    if (!clipboard) {
+        console.error('clipboard 요소를 찾을 수 없습니다.');
+        return;
+    }
+    
+    if (clipboardEmojis.length === 0) {
+        clipboard.innerHTML = '<span style="color: #999;">복사한 이모지가 여기에 표시됩니다</span>';
+    } else {
+        clipboard.textContent = clipboardEmojis.join(' ');
+    }
+}
+
+// 클립보드 지우기
+function clearClipboard() {
+    clipboardEmojis = [];
+    updateClipboard();
+    showToast('클립보드가 지워졌습니다');
+}
+
+// 토스트 메시지
+function showToast(message) {
+    const toast = document.getElementById('toast');
+    if (!toast) {
+        console.error('toast 요소를 찾을 수 없습니다.');
+        return;
+    }
+    
     toast.textContent = message;
     toast.classList.add('show');
-    setTimeout(() => {
-      toast.classList.remove('show');
-    }, 2000);
-  }
-
-  function updateMoreButton() {
-    const hasMore = displayedCount < filteredEmojis.length;
-    moreButton.hidden = !hasMore;
     
-    if (hasMore) {
-      const remaining = filteredEmojis.length - displayedCount;
-      moreButton.textContent = '더보기 (' + remaining + '개 남음)';
-    }
-  }
+    setTimeout(() => {
+        toast.classList.remove('show');
+    }, 1500);
+}
 
-  if (moreButton) {
-    moreButton.addEventListener('click', displayEmojis);
-  }
-
-  loadEmojis();
+// DOM이 완전히 로드된 후 실행
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM 로드 완료');
+    updateClipboard();
+    loadEmojis();
 });
+
+// 브라우저 호환성을 위한 추가 이벤트 리스너
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function() {
+        updateClipboard();
+        loadEmojis();
+    });
+} else {
+    // 이미 로드된 경우
+    updateClipboard();
+    loadEmojis();
+}
+
+// 전역 함수로 노출 (HTML onclick에서 사용)
+window.filterCategory = filterCategory;
+window.copyEmoji = copyEmoji;
+window.clearClipboard = clearClipboard;
