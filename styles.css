@@ -147,10 +147,10 @@ h1 {
 }
 
 .emoji {
-    font-size: 2rem;
+    font-size: 2.5rem;
     display: block;
     user-select: none;
-    font-family: 'Segoe UI Emoji', 'Noto Color Emoji', 'Android Emoji', 'EmojiSymbols', 'EmojiOne', sans-serif;
+    line-height: 1;
 }
 
 .loading {
@@ -201,7 +201,7 @@ h1 {
     }
     
     .emoji {
-        font-size: 1.5rem;
+        font-size: 2rem;
     }
     
     .categories {
