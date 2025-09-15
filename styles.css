@@ -101,6 +101,7 @@ h1 {
     cursor: pointer;
     transition: all 0.3s ease;
     font-weight: 500;
+    font-size: 0.9rem;
 }
 
 .category-btn:hover {
@@ -132,6 +133,7 @@ h1 {
     display: flex;
     align-items: center;
     justify-content: center;
+    min-height: 80px;
 }
 
 .emoji-item:hover {
@@ -148,6 +150,7 @@ h1 {
     font-size: 2rem;
     display: block;
     user-select: none;
+    font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', 'Android Emoji', 'EmojiSymbols', 'EmojiOne', sans-serif;
 }
 
 .loading {
@@ -155,6 +158,7 @@ h1 {
     padding: 3rem;
     font-size: 1.2rem;
     color: #666;
+    grid-column: 1 / -1;
 }
 
 .toast {
@@ -193,6 +197,7 @@ h1 {
     
     .emoji-item {
         padding: 0.75rem;
+        min-height: 60px;
     }
     
     .emoji {
@@ -205,7 +210,7 @@ h1 {
     
     .category-btn {
         padding: 0.5rem 1rem;
-        font-size: 0.9rem;
+        font-size: 0.8rem;
     }
 }
 
