@@ -1,7 +1,15 @@
-document.addEventListener('DOMContentLoaded', async () => {
+document.addEventListener('DOMContentLoaded', () => {
+  console.log('JavaScript 파일 로드 성공');
+  
   const grid = document.getElementById('grid');
   const moreButton = document.getElementById('more');
   const toast = document.getElementById('toast');
+  
+  // ... 모든 함수 정의들 ...
+  
+  // 맨 끝에서 loadEmojis 호출
+  loadEmojis();
+});
   
   let emojis = [];
   let filteredEmojis = [];
