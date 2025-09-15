@@ -19,12 +19,20 @@
     </p>
   </header>
   
-  <main>
-    <div id="grid" class="grid" aria-live="polite"></div>
-    <div class="actions">
-      <button id="more" class="more" hidden>더보기</button>
+<main>
+  <!-- 여기에 클립보드 추가 -->
+  <div class="clipboard">
+    <div class="clipboard-header">📋 클립보드</div>
+    <div class="clipboard-content" id="clipboardContent">
+      <div class="clipboard-empty">복사한 이모지가 표시됩니다.</div>
     </div>
-  </main>
+  </div>
+  
+  <div id="grid" class="grid" aria-live="polite"></div>
+  <div class="actions">
+    <button id="more" class="more" hidden>더보기</button>
+  </div>
+</main>
   
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
   <div id="live" class="sr-only" aria-live="polite"></div>
