@@ -24,10 +24,10 @@ const categoryIcons = {
     'Flags': '🏳️'
 };
 
-// 데이터 로드 - 변환 없이 원본 사용
+// 데이터 로드 - 올바른 컬럼 사용
 async function loadEmojis() {
     try {
-        console.log('변환 없이 원본 데이터 사용...');
+        console.log('올바른 컬럼으로 데이터 로드...');
         
         const response = await fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vTc7jzLftQBL-UUnwIHYR4yXHLp-fX3OKB0cE8l9tWKjCAr_Y_IpzO6P_aAbp6MZ_s2Qt26PC_71CVX/pub?gid=840637915&single=true&output=csv');
         const csvText = await response.text();
@@ -36,6 +36,9 @@ async function loadEmojis() {
         
         const lines = csvText.split('\n');
         console.log('총 라인:', lines.length);
+        
+        // 헤더 확인
+        console.log('헤더:', lines[0]);
         
         allEmojis = [];
         
@@ -47,28 +50,33 @@ async function loadEmojis() {
             const cleanLine = line.replace(/"/g, '');
             const fields = cleanLine.split(',');
             
-            if (fields.length < 3) continue;
+            if (i <= 3) {
+                console.log(`원본 라인 ${i}:`, fields);
+            }
             
-            const firstField = fields[0]?.trim() || '';
-            const nameKo = fields[1]?.trim() || '';
-            const category = fields[2]?.trim() || '';
+            if (fields.length < 5) continue;
             
-            // 변환 없이 첫 번째 필드를 그대로 사용
-            if (firstField) {
+            // 올바른 컬럼 순서로 변경
+            // A=id, B=category, C=code, D=emoji, E=name_en, F=name_ko
+            const category = fields[1]?.trim() || '';  // B 컬럼
+            const emoji = fields[3]?.trim() || '';     // D 컬럼  
+            const nameKo = fields[5]?.trim() || '';    // F 컬럼
+            
+            if (emoji && category) {
                 allEmojis.push({
-                    emoji: firstField,  // 변환 없이 그대로 사용
+                    emoji: emoji,
                     name_ko: nameKo || '이모지',
-                    category: category || '기타'
+                    category: category
                 });
                 
                 // 처음 10개 출력
                 if (allEmojis.length <= 10) {
-                    console.log(`데이터 ${allEmojis.length}:`, firstField, nameKo);
+                    console.log(`성공 ${allEmojis.length}:`, emoji, nameKo, category);
                 }
             }
         }
         
-        console.log(`총 ${allEmojis.length}개 데이터 로드`);
+        console.log(`총 ${allEmojis.length}개 이모지 로드`);
         
         if (allEmojis.length === 0) {
             document.getElementById('emojiGrid').innerHTML = '<div class="loading">데이터가 없습니다</div>';
