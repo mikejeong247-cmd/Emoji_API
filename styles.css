@@ -1,103 +1,217 @@
-/* 기존 CSS에 추가 */
-
-/* 그리드를 12개로 제한 */
-.grid {
-  display: grid;
-  grid-template-columns: repeat(12, 1fr);
-  gap: 8px;
-  padding: 1rem;
-  max-width: 1200px;
-  margin: 0 auto;
-}
-
-/* 광고 영역 */
-.ad-top {
-  width: 100%;
-  height: 100px;
-  background: #f0f0f0;
-  border: 1px dashed #ccc;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 1rem;
-  color: #666;
-}
-
-.ad-bottom {
-  width: 100%;
-  height: 100px;
-  background: #f0f0f0;
-  border: 1px dashed #ccc;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-top: 1rem;
-  color: #666;
-}
-
-.ad-left {
-  position: fixed;
-  left: 10px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 120px;
-  height: 600px;
-  background: #f0f0f0;
-  border: 1px dashed #ccc;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #666;
-  z-index: 10;
-}
-
-.ad-right {
-  position: fixed;
-  right: 10px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 120px;
-  height: 600px;
-  background: #f0f0f0;
-  border: 1px dashed #ccc;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #666;
-  z-index: 10;
-}
-
-.ad-middle {
-  width: 100%;
-  height: 100px;
-  background: #f0f0f0;
-  border: 1px dashed #ccc;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 1rem 0;
-  color: #666;
-}
-
-/* 메인 컨텐츠 여백 조정 */
-main {
-  margin: 0 150px;
-}
-
-@media (max-width: 1400px) {
-  .ad-left, .ad-right {
-    display: none;
-  }
-  
-  main {
+* {
     margin: 0;
-  }
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f5f5f5;
+    color: #333;
+}
+
+header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 2rem 0;
+    text-align: center;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+h1 {
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+    font-weight: 300;
+}
+
+.subtitle {
+    font-size: 1.1rem;
+    opacity: 0.9;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.clipboard-section {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e0e0e0;
+}
+
+.clipboard-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+}
+
+.clipboard-title {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #333;
+}
+
+.clear-clipboard {
+    background: #ff6b6b;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: background-color 0.2s;
+}
+
+.clear-clipboard:hover {
+    background: #ff5252;
+}
+
+.clipboard-content {
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 1rem;
+    min-height: 60px;
+    font-size: 1.5rem;
+    line-height: 1.8;
+    word-wrap: break-word;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.categories {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.category-btn {
+    background: white;
+    border: 2px solid #333;
+    color: #333;
+    padding: 0.75rem 1.5rem;
+    border-radius: 25px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 500;
+}
+
+.category-btn:hover {
+    background: #f0f0f0;
+}
+
+.category-btn.active {
+    background: #667eea;
+    color: white;
+    border-color: #667eea;
+}
+
+.emoji-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.emoji-item {
+    background: white;
+    border: 2px solid #333;
+    border-radius: 12px;
+    padding: 1rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.emoji-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    background: #f8f9fa;
+}
+
+.emoji-item:active {
+    transform: translateY(0);
+}
+
+.emoji {
+    font-size: 2rem;
+    display: block;
+}
+
+.loading {
+    text-align: center;
+    padding: 3rem;
+    font-size: 1.2rem;
+    color: #666;
+}
+
+.toast {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: #333;
+    color: white;
+    padding: 1rem 2rem;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    z-index: 1000;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+}
+
+.toast.show {
+    opacity: 1;
 }
 
 @media (max-width: 768px) {
-  .grid {
-    grid-template-columns: repeat(6, 1fr);
-    gap: 4px;
-    padding: 0.5rem;
-  }
+    .container {
+        padding: 1rem;
+    }
+    
+    h1 {
+        font-size: 2rem;
+    }
+    
+    .emoji-grid {
+        grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+        gap: 0.5rem;
+    }
+    
+    .emoji-item {
+        padding: 0.75rem;
+    }
+    
+    .emoji {
+        font-size: 1.5rem;
+    }
+    
+    .categories {
+        gap: 0.5rem;
+    }
+    
+    .category-btn {
+        padding: 0.5rem 1rem;
+        font-size: 0.9rem;
+    }
+}
+
+footer {
+    background: #333;
+    color: white;
+    text-align: center;
+    padding: 2rem;
+    margin-top: 3rem;
 }
