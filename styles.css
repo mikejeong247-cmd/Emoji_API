@@ -370,6 +370,204 @@ main {
   }
 }
 
+/* 복사 모달 */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.2s ease;
+}
+
+.modal-overlay.show {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.modal {
+  background: var(--background);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+  max-width: 400px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--border);
+  transform: scale(0.9) translateY(20px);
+  transition: transform 0.2s ease;
+}
+
+.modal-overlay.show .modal {
+  transform: scale(1) translateY(0);
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.modal-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: var(--radius-sm);
+  transition: all 0.2s ease;
+}
+
+.modal-close:hover {
+  background: var(--surface-hover);
+  color: var(--text-primary);
+}
+
+.modal-emoji {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.modal-emoji-symbol {
+  font-size: 4rem;
+  line-height: 1;
+  margin-bottom: 0.5rem;
+  display: block;
+}
+
+.modal-emoji-names {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.modal-emoji-name-ko {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 0.25rem;
+}
+
+.modal-emoji-name-en {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+.modal-emoji-code {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-family: 'Monaco', 'Menlo', monospace;
+  background: var(--surface);
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--radius-sm);
+  display: inline-block;
+  margin-top: 0.5rem;
+}
+
+.modal-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}
+
+.modal-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text-primary);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+}
+
+.modal-button:hover {
+  background: var(--surface-hover);
+  border-color: var(--primary-color);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.modal-button.primary {
+  background: var(--primary-color);
+  color: white;
+  border-color: var(--primary-color);
+}
+
+.modal-button.primary:hover {
+  background: var(--primary-hover);
+}
+
+.modal-button-icon {
+  font-size: 1rem;
+}
+
+/* 이모지 폴백 지원 */
+.emoji-symbol {
+  font-family: 
+    'Apple Color Emoji',
+    'Segoe UI Emoji', 
+    'Segoe UI Symbol',
+    'Noto Color Emoji',
+    'EmojiOne Color',
+    'Android Emoji',
+    'Twemoji Mozilla',
+    sans-serif;
+  font-variant-emoji: emoji;
+}
+
+.modal-emoji-symbol {
+  font-family: 
+    'Apple Color Emoji',
+    'Segoe UI Emoji', 
+    'Segoe UI Symbol',
+    'Noto Color Emoji',
+    'EmojiOne Color',
+    'Android Emoji',
+    'Twemoji Mozilla',
+    sans-serif;
+  font-variant-emoji: emoji;
+}
+
+/* 이모지 대체 텍스트 */
+.emoji-fallback {
+  background: var(--surface);
+  border: 1px dashed var(--border);
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  line-height: 1.2;
+  padding: 0.25rem;
+}
+
 /* 고대비 모드 지원 */
 @media (prefers-contrast: high) {
   .emoji-card {
@@ -377,6 +575,10 @@ main {
   }
   
   .search {
+    border-width: 2px;
+  }
+  
+  .modal {
     border-width: 2px;
   }
 }
