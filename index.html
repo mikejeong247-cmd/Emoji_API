@@ -3,33 +3,68 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Emoji Picker</title>
+  <title>이모지 복사 도구 - toolsgov.com</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
   <header class="header">
-    <input id="search" class="search" placeholder="검색: 이름(name_) 또는 키워드" autocomplete="off">
-    <div id="chips" class="chips"></div>
+    <h1 style="text-align: center; color: var(--text-primary); margin: 0; font-size: 1.5rem;">
+      📋 이모지 복사 도구
+    </h1>
+    <p style="text-align: center; color: var(--text-secondary); margin: 0.5rem 0 0 0; font-size: 0.875rem;">
+      이모지를 클릭하면 자동으로 복사됩니다
+    </p>
   </header>
-
   <main>
     <div id="grid" class="grid" aria-live="polite"></div>
     <div class="actions">
       <button id="more" class="more" hidden>더보기</button>
     </div>
   </main>
-
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
   <div id="live" class="sr-only" aria-live="polite"></div>
-
+  
+  <!-- 푸터는 기존 그대로 유지 -->
+  <footer class="footer">
+    <div class="footer-links">
+      <a href="privacy.html" class="footer-link">개인정보 보호정책</a>
+      <a href="terms.html" class="footer-link">이용약관</a>
+    </div>
+    
+    <div class="footer-copyright">
+      © 2025 이모지 복사 도구. All rights reserved.
+    </div>
+    
+    <div class="footer-attribution">
+      <h4>🎨 이모지 라이선스 및 출처</h4>
+      <div class="emoji-licenses">
+        <div class="license-item">
+          <span class="license-name">Twemoji</span><br>
+          코드: MIT License, 그래픽: CC BY 4.0<br>
+          <a href="https://github.com/twitter/twemoji" class="license-link" target="_blank">GitHub - Twitter Twemoji</a>
+        </div>
+        
+        <div class="license-item">
+          <span class="license-name">Noto Color Emoji</span><br>
+          SIL Open Font License 1.1<br>
+          <a href="https://github.com/googlefonts/noto-emoji" class="license-link" target="_blank">GitHub - Google Noto Emoji</a>
+        </div>
+        
+        <div class="license-item">
+          <span class="license-name">OpenMoji</span><br>
+          CC BY-SA 4.0 (동일조건변경허락)<br>
+          <a href="https://openmoji.org/" class="license-link" target="_blank">OpenMoji.org</a>
+        </div>
+        
+        <div class="license-item">
+          <span class="license-name">Unicode Standard</span><br>
+          Unicode® Consortium<br>
+          <a href="https://unicode.org/emoji/" class="license-link" target="_blank">Unicode Emoji Standard</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+  
   <script src="app.js"></script>
-  <!-- index.html 하단, </body> 태그 직전에 추가 -->
-<footer style="text-align: center; padding: 2rem; border-top: 1px solid var(--border); margin-top: 2rem;">
-  <div style="display: flex; justify-content: center; gap: 2rem; margin-bottom: 1rem;">
-    <a href="privacy.html" style="color: var(--text-muted); text-decoration: none; font-size: 0.875rem;">개인정보 보호정책</a>
-    <a href="terms.html" style="color: var(--text-muted); text-decoration: none; font-size: 0.875rem;">이용약관</a>
-  </div>
-  <p style="color: var(--text-muted); font-size: 0.75rem;">© 2025 Emoji Picker. All rights reserved.</p>
-</footer>
 </body>
 </html>
