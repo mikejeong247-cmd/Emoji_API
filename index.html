@@ -146,7 +146,7 @@
             transform: translateY(-10px);
             transition: all 0.3s ease;
             z-index: 1000;
-            max-height: 400px;
+            max-height: 300px;
             overflow-y: auto;
         }
 
@@ -479,7 +479,7 @@
                 </button>
                 <div class="dropdown-menu" id="dropdownMenu">
                     <!-- 이모지 대카테고리 -->
-                    <div class="dropdown-item has-submenu" onmouseover="showSubmenu(this)" onmouseout="hideSubmenu(this)">
+                    <div class="dropdown-item has-submenu">
                         😀 이모지
                         <div class="submenu">
                             <div class="submenu-item" onclick="selectCategory('스마일리 및 감정')">😀 스마일리 및 감정</div>
@@ -494,7 +494,7 @@
                         </div>
                     </div>
                     <!-- 특수기호 대카테고리 -->
-                    <div class="dropdown-item has-submenu" onmouseover="showSubmenu(this)" onmouseout="hideSubmenu(this)">
+                    <div class="dropdown-item has-submenu">
                         ∑ 특수기호
                         <div class="submenu">
                             <div class="submenu-item" onclick="selectCategory('수학기호')">∑ 수학기호</div>
@@ -683,28 +683,6 @@
             
             button.classList.toggle('open');
             menu.classList.toggle('show');
-        }
-
-        // 서브메뉴 표시
-        function showSubmenu(element) {
-            const submenu = element.querySelector('.submenu');
-            if (submenu) {
-                submenu.style.opacity = '1';
-                submenu.style.visibility = 'visible';
-                submenu.style.transform = 'translateX(0)';
-            }
-        }
-
-        // 서브메뉴 숨기기
-        function hideSubmenu(element) {
-            setTimeout(() => {
-                const submenu = element.querySelector('.submenu');
-                if (submenu && !submenu.matches(':hover')) {
-                    submenu.style.opacity = '0';
-                    submenu.style.visibility = 'hidden';
-                    submenu.style.transform = 'translateX(-10px)';
-                }
-            }, 100);
         }
 
         // 카테고리 선택
@@ -1005,8 +983,6 @@
         // 전역 함수 노출
         window.toggleDropdown = toggleDropdown;
         window.selectCategory = selectCategory;
-        window.showSubmenu = showSubmenu;
-        window.hideSubmenu = hideSubmenu;
         window.loadMoreItems = loadMoreItems;
         window.copyItem = copyItem;
         window.clearClipboard = clearClipboard;
