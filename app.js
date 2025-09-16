@@ -1,4 +1,27 @@
 let allEmojis = [];
+// 유니코드 변환 함수 추가
+function unicodeToEmoji(unicodeStr) {
+    if (!unicodeStr || !unicodeStr.includes('U+')) {
+        return unicodeStr;
+    }
+    
+    try {
+        const codePoints = unicodeStr
+            .split(' ')
+            .map(code => code.replace('U+', ''))
+            .filter(code => code.length > 0)
+            .map(code => parseInt(code, 16));
+            
+        if (codePoints.length === 0) {
+            return unicodeStr;
+        }
+        
+        return String.fromCodePoint(...codePoints);
+    } catch (error) {
+        console.warn('유니코드 변환 실패:', unicodeStr, error);
+        return unicodeStr;
+    }
+}
 let clipboardEmojis = [];
 let currentCategory = 'all';
 
