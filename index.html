@@ -154,7 +154,7 @@
             visibility: hidden;
             transition: all 0.3s ease;
             z-index: 1000;
-            min-width: 220px;
+            min-width: 250px;
             max-height: 400px;
             overflow-y: auto;
         }
@@ -171,6 +171,9 @@
             border-bottom: 1px solid #f0f0f0;
             font-size: 0.95rem;
             white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
 
         .dropdown-item:hover {
@@ -179,6 +182,10 @@
 
         .dropdown-item:last-child {
             border-bottom: none;
+        }
+
+        .dropdown-item .category-icon {
+            font-size: 1.2rem;
         }
 
         .emoji-grid {
@@ -391,7 +398,21 @@
         let currentCategory = '';
         const ITEMS_PER_PAGE = 70;
 
-        // 특수기호 데이터 (스프레드시트 대체용)
+        // 카테고리별 대표 이모지와 한국어명
+        const categoryInfo = {
+            'Smileys & Emotion': { icon: '😀', nameKo: '스마일리 및 감정' },
+            'People & Body': { icon: '👤', nameKo: '사람 및 신체' },
+            'Animals & Nature': { icon: '🐶', nameKo: '동물 및 자연' },
+            'Food & Drink': { icon: '🍎', nameKo: '음식 및 음료' },
+            'Travel & Places': { icon: '✈️', nameKo: '여행 및 장소' },
+            'Activities': { icon: '⚽', nameKo: '활동' },
+            'Objects': { icon: '📱', nameKo: '사물' },
+            'Symbols': { icon: '❤️', nameKo: '기호' },
+            'Flags': { icon: '🏳️', nameKo: '깃발' },
+            'Component': { icon: '🔲', nameKo: '구성요소' }
+        };
+
+        // 특수기호 데이터
         allSymbols = [
             {symbol: '∑', name_ko: '시그마 합계', category: '수학기호'},
             {symbol: '∞', name_ko: '무한대', category: '수학기호'},
@@ -514,13 +535,8 @@
                 // 드롭다운 메뉴 생성
                 createDropdownMenus();
                 
-                // 첫 번째 카테고리 자동 선택
-                if (allEmojis.length > 0) {
-                    const firstCategory = getUniqueCategories(allEmojis)[0];
-                    if (firstCategory) {
-                        selectCategory(firstCategory, 'emoji');
-                    }
-                }
+                // 첫 번째 카테고리(Smileys & Emotion) 자동 선택
+                selectCategory('Smileys & Emotion', 'emoji');
             })
             .catch(error => {
                 console.error('로드 오류:', error);
@@ -544,7 +560,14 @@
             emojiCategories.forEach(category => {
                 const div = document.createElement('div');
                 div.className = 'dropdown-item';
-                div.textContent = category;
+                
+                const info = categoryInfo[category] || { icon: '📁', nameKo: category };
+                
+                div.innerHTML = `
+                    <span class="category-icon">${info.icon}</span>
+                    <span>${info.nameKo}</span>
+                `;
+                
                 div.onclick = () => selectCategory(category, 'emoji');
                 emojiDropdown.appendChild(div);
             });
@@ -554,10 +577,22 @@
             const symbolDropdown = document.getElementById('symbolDropdown');
             symbolDropdown.innerHTML = '';
             
+            const symbolIcons = {
+                '수학기호': '∑',
+                '화살표': '→',
+                '통화기호': '$',
+                '그리스문자': 'α'
+            };
+            
             symbolCategories.forEach(category => {
                 const div = document.createElement('div');
                 div.className = 'dropdown-item';
-                div.textContent = category;
+                
+                div.innerHTML = `
+                    <span class="category-icon">${symbolIcons[category] || '?'}</span>
+                    <span>${category}</span>
+                `;
+                
                 div.onclick = () => selectCategory(category, 'symbol');
                 symbolDropdown.appendChild(div);
             });
