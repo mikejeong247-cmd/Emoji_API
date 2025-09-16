@@ -1,96 +1,9 @@
-// 외부 클릭시 드롭다운 닫기
-        document.addEventListener('click', function(event) {
-            const dropdown1 = document.querySelectorAll('.dropdown-container')[0];
-            const dropdown2 = document.querySelectorAll('.dropdown-container')[1];
-            
-            // 이모지 드롭다운 닫기
-            if (dropdown1 && !dropdown1.contains(event.target)) {
-                const button1 = document.querySelectorAll('.dropdown-button')[0];
-                const menu1 = document.getElementById('dropdownMenu');
-                if (button1) button1.classList.remove('open');
-                if (menu1) menu1.classList.remove('show');
-            }
-            
-            // 특수기호 드롭다운 닫기
-            if (dropdown2 && !dropdown2.contains(event.target)) {
-                const button2 = document.querySelectorAll('.dropdown-button')[1];
-                const menu2 = document.getElementById('symbolDropdownMenu');
-                if (button2) button2.classList.remove('open');
-                if (menu2) menu2.classList.remove('show');
-            }
-        });
-
-        // 데이터 로드
-        function loadEmojis() {
-            console.log('이모지 데이터 로드 시작');
-            
-            if (typeof fetch === 'undefined') {
-                console.error('이 브라우저는 fetch를 지원하지 않습니다.');
-                document.getElementById('emojiGrid').innerHTML = '<div class="loading">브라우저가 지원되지 않습니다.</div>';
-                return;
-            }
-            
-            fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vTc7jzLftQBL-UUnwIHYR4yXHLp-fX3OKB0cE8l9tWKjCAr_Y_IpzO6P_aAbp6MZ_s2Qt26PC_71CVX/pub?gid=840637915&single=true&output=csv')
-            .then(function(response) {
-                if (!response.ok) {
-                    throw new Error('네트워크 응답이 좋지 않습니다');
-                }
-                return response.text();
-            })
-            .then(function(csvText) {
-                console.log('CSV 데이터 로드 완료');
-                
-                const lines = csvText.split('\n');
-                allEmojis = [];
-                
-                for (let i = 1; i < lines.length; i++) {
-                    const line = lines[i].trim();
-                    if (!line) continue;
-                    
-                    const cleanLine = line.replace(/"/g, '');
-                    const fields = cleanLine.split(',');
-                    
-                    if (fields.length < 5) continue;
-                    
-                    const category = fields[1] ? fields[1].trim() : '';
-                    let emoji = fields[3] ? fields[3].trim() : '';
-                    const nameKo = fields[5] ? fields[5].trim() : '';
-                    
-                    // 유니코드 코드포인트를 실제 이모지로 변환
-                    if (emoji && emoji.includes('U+')) {
-                        emoji = unicodeToEmoji(emoji);
-                    }
-                    // 2글자 국가 코드를 국기로 변환
-                    else if (emoji && emoji.length === 2 && /^[A-Z]{2}$/.test(emoji) && 
-                             (category === '깃발' || category === 'Flags')) {
-                        emoji = countryCodeToFlag(emoji);
-                    }
-                    
-                    if (emoji && category) {
-                        allEmojis.push({
-                            emoji: emoji,
-                            name_ko: nameKo || '이모지',
-                            category: category
-                        });
-                    }
-                }
-                
-                console.log('총 ' + allEmojis.length + '개 이모지 로드 완료');
-                
-                // 기본값: 이모지 전체 표시
-                selectCategory('all', 'emoji');
-            })
-            .catch(function(error) {
-                console.error('로드 오류:', error);
-                document.getElementById('emojiGrid').innerHTML = '<div class="loading">로드 실패: ' + error.message + '</div>';
-            });
-        }<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>이모지 모음</title>
-    <link rel="icon" type="image/png" href="favicon-32x32.png">
     <style>
         * {
             margin: 0;
@@ -174,72 +87,98 @@
             text-align: center;
         }
 
-        /* 카테고리 버튼 스타일 */
-        .category-buttons {
-            display: flex;
-            gap: 15px;
-            margin-bottom: 20px;
-            justify-content: center;
+        .category-section {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
         }
 
-        .main-category-btn {
-            background: #ffffff;
-            border: 2px solid #e1e8ed;
-            padding: 15px 25px;
+        .button-container {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .dropdown-wrapper {
+            position: relative;
+            display: inline-block;
+        }
+
+        .category-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
             border-radius: 25px;
             cursor: pointer;
             font-size: 1.1rem;
             font-weight: 500;
-            color: #333;
-            transition: all 0.3s ease;
-            white-space: nowrap;
-        }
-
-        .main-category-btn:hover {
-            background: #f0f8ff;
-            border-color: #5b7bd5;
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(91, 123, 213, 0.2);
-        }
-
-        .main-category-btn.active {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border-color: transparent;
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
-        }
-
-        /* 하위 카테고리 스타일 */
-        .sub-categories {
             display: flex;
-            flex-wrap: wrap;
+            align-items: center;
             gap: 10px;
+            transition: all 0.3s ease;
+            min-width: 150px;
             justify-content: center;
         }
 
-        .sub-category-btn {
-            background: #ffffff;
-            border: 2px solid #e1e8ed;
-            padding: 10px 18px;
-            border-radius: 20px;
-            cursor: pointer;
-            font-size: 0.9rem;
-            font-weight: 500;
-            color: #333;
+        .category-button:hover {
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+            transform: translateY(-2px);
+        }
+
+        .category-button.active {
+            background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+        }
+
+        .dropdown-arrow {
+            font-size: 0.8rem;
+            transition: transform 0.3s ease;
+        }
+
+        .category-button.open .dropdown-arrow {
+            transform: rotate(180deg);
+        }
+
+        .dropdown-menu {
+            position: absolute;
+            top: calc(100% + 10px);
+            left: 50%;
+            transform: translateX(-50%);
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            opacity: 0;
+            visibility: hidden;
             transition: all 0.3s ease;
+            z-index: 1000;
+            min-width: 220px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .dropdown-menu.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .dropdown-item {
+            padding: 12px 20px;
+            cursor: pointer;
+            transition: background 0.2s ease;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 0.95rem;
             white-space: nowrap;
         }
 
-        .sub-category-btn:hover {
-            background: #f0f8ff;
-            border-color: #5b7bd5;
-            transform: translateY(-1px);
+        .dropdown-item:hover {
+            background: #f8f9fa;
         }
 
-        .sub-category-btn.active {
-            background: #5b7bd5;
-            color: white;
-            border-color: #5b7bd5;
+        .dropdown-item:last-child {
+            border-bottom: none;
         }
 
         .emoji-grid {
@@ -282,11 +221,8 @@
             font-size: 2rem;
             line-height: 1;
             font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", "Android Emoji", sans-serif;
-            font-variant-emoji: emoji;
-            text-rendering: optimizeSpeed;
         }
 
-        /* 더보기 버튼 스타일 */
         .load-more-container {
             text-align: center;
             margin: 20px 0;
@@ -309,20 +245,6 @@
             transform: translateY(-2px);
         }
 
-        .load-more-btn:disabled {
-            background: #ccc;
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
-        }
-
-        .loading {
-            text-align: center;
-            font-size: 1.2rem;
-            color: #666;
-            padding: 50px;
-        }
-
         .toast {
             position: fixed;
             bottom: 30px;
@@ -343,7 +265,6 @@
             opacity: 1;
         }
 
-        /* Footer 스타일 */
         .footer {
             background: rgba(255, 255, 255, 0.95);
             padding: 20px;
@@ -364,71 +285,36 @@
             margin-bottom: 10px;
         }
 
-        .footer a {
-            color: #667eea;
-            text-decoration: none;
-            font-weight: 500;
-        }
-
-        .footer a:hover {
-            text-decoration: underline;
-        }
-
-        .emoji-sources {
-            display: flex;
-            justify-content: center;
-            gap: 20px;
-            flex-wrap: wrap;
-            margin-top: 10px;
-        }
-
-        .source-link {
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            padding: 5px 10px;
-            background: rgba(102, 126, 234, 0.1);
+        .current-category {
+            text-align: center;
+            margin-bottom: 20px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.5);
             border-radius: 10px;
-            transition: all 0.3s ease;
+            font-size: 1.1rem;
+            font-weight: 500;
+            color: #333;
         }
 
-        .source-link:hover {
-            background: rgba(102, 126, 234, 0.2);
-            transform: translateY(-1px);
-        }
-
-        /* 모바일 반응형 */
         @media (max-width: 768px) {
             .container {
                 padding: 15px;
                 padding-top: 220px;
             }
 
-            .clipboard-section {
-                padding: 15px;
+            .button-container {
+                flex-direction: column;
+                align-items: stretch;
             }
 
-            .clipboard-header h3 {
-                font-size: 1.1rem;
-            }
-
-            .clear-btn {
-                padding: 6px 12px;
-                font-size: 0.8rem;
-            }
-
-            #clipboard {
-                font-size: 1.2rem;
-                min-height: 50px;
-                padding: 12px;
-            }
-
-            .dropdown-container {
+            .category-button {
                 width: 100%;
             }
 
-            .dropdown-button {
-                font-size: 1rem;
+            .dropdown-menu {
+                width: calc(100vw - 40px);
+                left: 50%;
+                transform: translateX(-50%);
             }
 
             .emoji-grid {
@@ -436,50 +322,6 @@
                 gap: 10px;
                 padding: 20px;
             }
-
-            .emoji {
-                font-size: 1.5rem;
-            }
-
-            .emoji-sources {
-                flex-direction: column;
-                gap: 10px;
-            }
-
-            .submenu {
-                position: fixed;
-                left: 50%;
-                top: 50%;
-                transform: translate(-50%, -50%);
-                width: 80%;
-                max-width: 300px;
-                z-index: 1002;
-            }
-
-            .dropdown-item.has-submenu:hover .submenu {
-                opacity: 1;
-                visibility: visible;
-                transform: translate(-50%, -50%);
-            }
-        }
-
-        /* 스크롤바 커스터마이징 */
-        .dropdown-menu::-webkit-scrollbar {
-            width: 6px;
-        }
-
-        .dropdown-menu::-webkit-scrollbar-track {
-            background: #f1f1f1;
-            border-radius: 10px;
-        }
-
-        .dropdown-menu::-webkit-scrollbar-thumb {
-            background: #667eea;
-            border-radius: 10px;
-        }
-
-        .dropdown-menu::-webkit-scrollbar-thumb:hover {
-            background: #5a6fd8;
         }
     </style>
 </head>
@@ -498,37 +340,42 @@
 
     <div class="container">
         <div class="category-section">
-            <div class="category-buttons">
-                <button class="main-category-btn active" onclick="showEmojiCategories()" id="emojiBtn">
-                    😀 이모지
-                </button>
-                <button class="main-category-btn" onclick="showSymbolCategories()" id="symbolBtn">
-                    ∑ 특수기호
-                </button>
+            <div class="button-container">
+                <!-- 이모지 드롭다운 -->
+                <div class="dropdown-wrapper">
+                    <button class="category-button" id="emojiButton" onclick="toggleDropdown('emoji')">
+                        <span>😀 이모지</span>
+                        <span class="dropdown-arrow">▼</span>
+                    </button>
+                    <div class="dropdown-menu" id="emojiDropdown">
+                        <div class="dropdown-item" onclick="selectCategory('스마일리', 'emoji')">😀 스마일리 및 감정</div>
+                        <div class="dropdown-item" onclick="selectCategory('사람', 'emoji')">👤 사람 및 신체</div>
+                        <div class="dropdown-item" onclick="selectCategory('동물', 'emoji')">🐶 동물 및 자연</div>
+                        <div class="dropdown-item" onclick="selectCategory('음식', 'emoji')">🍎 음식 및 음료</div>
+                        <div class="dropdown-item" onclick="selectCategory('활동', 'emoji')">⚽ 활동</div>
+                        <div class="dropdown-item" onclick="selectCategory('사물', 'emoji')">📱 사물</div>
+                        <div class="dropdown-item" onclick="selectCategory('기호', 'emoji')">❤️ 기호</div>
+                    </div>
+                </div>
+
+                <!-- 특수기호 드롭다운 -->
+                <div class="dropdown-wrapper">
+                    <button class="category-button" id="symbolButton" onclick="toggleDropdown('symbol')">
+                        <span>∑ 특수기호</span>
+                        <span class="dropdown-arrow">▼</span>
+                    </button>
+                    <div class="dropdown-menu" id="symbolDropdown">
+                        <div class="dropdown-item" onclick="selectCategory('수학', 'symbol')">∑ 수학기호</div>
+                        <div class="dropdown-item" onclick="selectCategory('화살표', 'symbol')">→ 화살표</div>
+                        <div class="dropdown-item" onclick="selectCategory('통화', 'symbol')">$ 통화기호</div>
+                        <div class="dropdown-item" onclick="selectCategory('그리스', 'symbol')">α 그리스문자</div>
+                    </div>
+                </div>
             </div>
-            
-            <!-- 이모지 하위 카테고리들 -->
-            <div class="sub-categories" id="emojiCategories">
-                <button class="sub-category-btn active" onclick="selectCategory('all', 'emoji')">전체</button>
-                <button class="sub-category-btn" onclick="selectCategory('스마일리 및 감정', 'emoji')">😀 스마일리 및 감정</button>
-                <button class="sub-category-btn" onclick="selectCategory('사람 및 신체', 'emoji')">👤 사람 및 신체</button>
-                <button class="sub-category-btn" onclick="selectCategory('동물 및 자연', 'emoji')">🐶 동물 및 자연</button>
-                <button class="sub-category-btn" onclick="selectCategory('음식 및 음료', 'emoji')">🍎 음식 및 음료</button>
-                <button class="sub-category-btn" onclick="selectCategory('여행 및 장소', 'emoji')">🌍 여행 및 장소</button>
-                <button class="sub-category-btn" onclick="selectCategory('활동', 'emoji')">⚽ 활동</button>
-                <button class="sub-category-btn" onclick="selectCategory('사물', 'emoji')">📱 사물</button>
-                <button class="sub-category-btn" onclick="selectCategory('기호', 'emoji')">❤️ 기호</button>
-                <button class="sub-category-btn" onclick="selectCategory('깃발', 'emoji')">🏳️ 깃발</button>
-            </div>
-            
-            <!-- 특수기호 하위 카테고리들 (숨김) -->
-            <div class="sub-categories" id="symbolCategories" style="display: none;">
-                <button class="sub-category-btn" onclick="selectCategory('all', 'symbol')">전체</button>
-                <button class="sub-category-btn" onclick="selectCategory('수학기호', 'symbol')">∑ 수학기호</button>
-                <button class="sub-category-btn" onclick="selectCategory('화살표', 'symbol')">→ 화살표</button>
-                <button class="sub-category-btn" onclick="selectCategory('통화기호', 'symbol')">$ 통화기호</button>
-                <button class="sub-category-btn" onclick="selectCategory('그리스문자', 'symbol')">α 그리스문자</button>
-            </div>
+        </div>
+
+        <div class="current-category" id="currentCategory">
+            카테고리를 선택하세요
         </div>
 
         <div id="emojiGrid" class="emoji-grid">
@@ -544,19 +391,7 @@
 
     <footer class="footer">
         <div class="footer-content">
-            <p>© 2024 이모지 모음. 모든 이모지는 해당 출처의 저작권을 따릅니다.</p>
-            <p>이모지 데이터 출처:</p>
-            <div class="emoji-sources">
-                <span class="source-link">
-                    Twemoji (Twitter)
-                </span>
-                <span class="source-link">
-                    OpenMoji
-                </span>
-                <span class="source-link">
-                    Unicode Consortium
-                </span>
-            </div>
+            <p>© 2024 이모지 모음. 모든 이모지는 유니코드 표준을 따릅니다.</p>
             <p style="margin-top: 15px; font-size: 0.8rem; color: #999;">
                 이 웹사이트는 교육 및 개인 사용 목적으로 제작되었습니다.
             </p>
@@ -566,536 +401,215 @@
     <div id="toast" class="toast"></div>
 
     <script>
-        let allEmojis = [];
-        let allSymbols = [];
-        let clipboardEmojis = [];
-        let currentMode = 'emoji'; // 'emoji' 또는 'symbol'
-        let currentCategory = 'all';
-        let filteredItems = [];
-        let displayedCount = 0;
-        const ITEMS_PER_PAGE = 70;
-
-        // 카테고리별 대표 이모지
-        const categoryIcons = {
-            '스마일리 및 감정': '😀',
-            '사람 및 신체': '👤', 
-            '동물 및 자연': '🐶',
-            '음식 및 음료': '🍎',
-            '여행 및 장소': '🌍',
-            '활동': '⚽',
-            '사물': '📱',
-            '기호': '❤️',
-            '깃발': '🏳️',
-            'Smileys & Emotion': '😀',
-            'People & Body': '👤',
-            'Animals & Nature': '🐶', 
-            'Food & Drink': '🍎',
-            'Travel & Places': '🌍',
-            'Activities': '⚽',
-            'Objects': '📱',
-            'Symbols': '❤️',
-            'Flags': '🏳️',
-            '수학기호': '∑',
-            '화살표': '→',
-            '통화기호': '$',
-            '그리스문자': 'α'
+        // 샘플 데이터
+        const emojiData = {
+            '스마일리': ['😀', '😃', '😄', '😁', '😅', '😆', '😂', '🤣', '😊', '😇', '🙂', '🙃', '😉', '😌', '😍', '🥰', '😘', '😗', '😙', '😚', '😋', '😛', '😜', '🤪', '😝', '🤑', '🤗', '🤭', '🤫', '🤔'],
+            '사람': ['👶', '👧', '🧒', '👦', '👩', '🧑', '👨', '👩‍🦱', '🧑‍🦱', '👨‍🦱', '👩‍🦰', '🧑‍🦰', '👨‍🦰', '👱‍♀️', '👱', '👱‍♂️', '👩‍🦳', '🧑‍🦳', '👨‍🦳', '👩‍🦲', '🧑‍🦲', '👨‍🦲'],
+            '동물': ['🐶', '🐱', '🐭', '🐹', '🐰', '🦊', '🦝', '🐻', '🐼', '🦘', '🦡', '🐨', '🐯', '🦁', '🐮', '🐷', '🐽', '🐸', '🐵', '🙈', '🙉', '🙊', '🐒', '🐔', '🐧', '🐦', '🐤', '🐣', '🐥', '🦆'],
+            '음식': ['🍎', '🍐', '🍊', '🍋', '🍌', '🍉', '🍇', '🍓', '🫐', '🍈', '🍒', '🍑', '🥭', '🍍', '🥥', '🥝', '🍅', '🍆', '🥑', '🥦', '🥬', '🥒', '🌶️', '🫑', '🌽', '🥕', '🫒', '🧄', '🧅', '🥔'],
+            '활동': ['⚽', '🏀', '🏈', '⚾', '🥎', '🎾', '🏐', '🏉', '🥏', '🎱', '🪀', '🏓', '🏸', '🏒', '🏑', '🥍', '🏏', '🪃', '🥅', '⛳', '🪁', '🏹', '🎣', '🤿', '🥊', '🥋', '🎽', '🛹', '🛼', '🛷'],
+            '사물': ['📱', '💻', '⌨️', '🖥️', '🖨️', '🖱️', '🖲️', '🕹️', '🗜️', '💽', '💾', '💿', '📀', '📼', '📷', '📸', '📹', '🎥', '📽️', '🎞️', '📞', '☎️', '📟', '📠', '📺', '📻', '🎙️', '🎚️', '🎛️', '🧭'],
+            '기호': ['❤️', '🧡', '💛', '💚', '💙', '💜', '🖤', '🤍', '🤎', '💔', '❤️‍🔥', '❤️‍🩹', '❣️', '💕', '💞', '💓', '💗', '💖', '💘', '💝', '💟', '☮️', '✝️', '☪️', '🕉️', '☸️', '✡️', '🔯', '🕎', '☯️']
         };
 
-        // 특수기호 데이터
-        allSymbols = [
-            {symbol: '∑', name_ko: '시그마 합계', category: '수학기호'},
-            {symbol: '∞', name_ko: '무한대', category: '수학기호'},
-            {symbol: '∂', name_ko: '편미분', category: '수학기호'},
-            {symbol: '∫', name_ko: '적분', category: '수학기호'},
-            {symbol: '√', name_ko: '제곱근', category: '수학기호'},
-            {symbol: '±', name_ko: '플러스마이너스', category: '수학기호'},
-            {symbol: '≤', name_ko: '작거나 같음', category: '수학기호'},
-            {symbol: '≥', name_ko: '크거나 같음', category: '수학기호'},
-            {symbol: '≠', name_ko: '같지 않음', category: '수학기호'},
-            {symbol: '≈', name_ko: '근사', category: '수학기호'},
-            {symbol: '→', name_ko: '오른쪽 화살표', category: '화살표'},
-            {symbol: '←', name_ko: '왼쪽 화살표', category: '화살표'},
-            {symbol: '↑', name_ko: '위쪽 화살표', category: '화살표'},
-            {symbol: '↓', name_ko: '아래쪽 화살표', category: '화살표'},
-            {symbol: '↔', name_ko: '양방향 화살표', category: '화살표'},
-            {symbol: '⇒', name_ko: '이중 오른쪽 화살표', category: '화살표'},
-            {symbol: '⇐', name_ko: '이중 왼쪽 화살표', category: '화살표'},
-            {symbol: '⇔', name_ko: '이중 양방향 화살표', category: '화살표'},
-            {symbol: '$', name_ko: '달러', category: '통화기호'},
-            {symbol: '€', name_ko: '유로', category: '통화기호'},
-            {symbol: '¥', name_ko: '엔', category: '통화기호'},
-            {symbol: '£', name_ko: '파운드', category: '통화기호'},
-            {symbol: '₩', name_ko: '원', category: '통화기호'},
-            {symbol: '¢', name_ko: '센트', category: '통화기호'},
-            {symbol: 'α', name_ko: '알파', category: '그리스문자'},
-            {symbol: 'β', name_ko: '베타', category: '그리스문자'},
-            {symbol: 'γ', name_ko: '감마', category: '그리스문자'},
-            {symbol: 'δ', name_ko: '델타', category: '그리스문자'},
-            {symbol: 'ε', name_ko: '엡실론', category: '그리스문자'},
-            {symbol: 'π', name_ko: '파이', category: '그리스문자'},
-            {symbol: 'λ', name_ko: '람다', category: '그리스문자'},
-            {symbol: 'μ', name_ko: '뮤', category: '그리스문자'},
-            {symbol: 'σ', name_ko: '시그마', category: '그리스문자'},
-            {symbol: 'ω', name_ko: '오메가', category: '그리스문자'}
-        ];
+        const symbolData = {
+            '수학': ['∑', '∞', '∂', '∫', '√', '±', '≤', '≥', '≠', '≈', '∝', '∈', '∉', '∩', '∪', '⊂', '⊃', '⊆', '⊇', '∀', '∃', '∅', '∇', '∏', '∐'],
+            '화살표': ['→', '←', '↑', '↓', '↔', '↕', '↖', '↗', '↘', '↙', '⇒', '⇐', '⇑', '⇓', '⇔', '⇕', '⇖', '⇗', '⇘', '⇙', '➜', '➡', '➤', '⬆', '⬇', '⬅', '➔', '↩', '↪', '⤴'],
+            '통화': ['$', '€', '¥', '£', '₩', '¢', '₽', '₹', '₨', '₪', '₫', '₦', '₱', '₡', '₵', '₴', '₸', '₺', '₼', '₿'],
+            '그리스': ['α', 'β', 'γ', 'δ', 'ε', 'ζ', 'η', 'θ', 'ι', 'κ', 'λ', 'μ', 'ν', 'ξ', 'ο', 'π', 'ρ', 'σ', 'τ', 'υ', 'φ', 'χ', 'ψ', 'ω', 'Α', 'Β', 'Γ', 'Δ', 'Ε', 'Ζ']
+        };
 
-        // 브라우저 감지
-        function getBrowserInfo() {
-            const ua = navigator.userAgent;
-            return {
-                isSamsung: ua.indexOf('SamsungBrowser') > -1,
-                isSafari: ua.indexOf('Safari') > -1 && ua.indexOf('Chrome') === -1,
-                isFirefox: ua.indexOf('Firefox') > -1,
-                isChrome: ua.indexOf('Chrome') > -1,
-                isMobile: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua),
-                isInApp: ua.indexOf('NAVER') > -1 || ua.indexOf('KAKAOTALK') > -1 || ua.indexOf('FB') > -1
+        let clipboardItems = [];
+        let currentItems = [];
+        let displayedCount = 0;
+        let currentCategoryName = '';
+        let currentType = '';
+        const ITEMS_PER_PAGE = 70;
+
+        function toggleDropdown(type) {
+            const dropdown = document.getElementById(type + 'Dropdown');
+            const button = document.getElementById(type + 'Button');
+            const otherType = type === 'emoji' ? 'symbol' : 'emoji';
+            const otherDropdown = document.getElementById(otherType + 'Dropdown');
+            const otherButton = document.getElementById(otherType + 'Button');
+            
+            // 다른 드롭다운 닫기
+            otherDropdown.classList.remove('show');
+            otherButton.classList.remove('open');
+            
+            // 현재 드롭다운 토글
+            dropdown.classList.toggle('show');
+            button.classList.toggle('open');
+        }
+
+        function selectCategory(category, type) {
+            const categoryNames = {
+                '스마일리': '😀 스마일리 및 감정',
+                '사람': '👤 사람 및 신체',
+                '동물': '🐶 동물 및 자연',
+                '음식': '🍎 음식 및 음료',
+                '활동': '⚽ 활동',
+                '사물': '📱 사물',
+                '기호': '❤️ 기호',
+                '수학': '∑ 수학기호',
+                '화살표': '→ 화살표',
+                '통화': '$ 통화기호',
+                '그리스': 'α 그리스문자'
             };
-        }
 
-        // 브라우저별 이벤트 처리
-        function addCompatibleEventListener(element, eventType, handler) {
-            if (element.addEventListener) {
-                element.addEventListener(eventType, handler, false);
-            } else if (element.attachEvent) {
-                element.attachEvent('on' + eventType, handler);
+            currentCategoryName = categoryNames[category] || category;
+            currentType = type;
+            
+            // 현재 카테고리 표시 업데이트
+            document.getElementById('currentCategory').textContent = '현재 카테고리: ' + currentCategoryName;
+            
+            // 모든 드롭다운 닫기
+            document.getElementById('emojiDropdown').classList.remove('show');
+            document.getElementById('symbolDropdown').classList.remove('show');
+            document.getElementById('emojiButton').classList.remove('open');
+            document.getElementById('symbolButton').classList.remove('open');
+            
+            // 활성 버튼 표시
+            if (type === 'emoji') {
+                document.getElementById('emojiButton').classList.add('active');
+                document.getElementById('symbolButton').classList.remove('active');
+                currentItems = emojiData[category] || [];
             } else {
-                element['on' + eventType] = handler;
-            }
-        }
-
-        // 유니코드 변환 함수
-        function unicodeToEmoji(unicodeStr) {
-            if (!unicodeStr || !unicodeStr.includes('U+')) {
-                return unicodeStr;
-            }
-            
-            try {
-                const codePoints = unicodeStr
-                    .split(' ')
-                    .map(code => code.replace('U+', ''))
-                    .filter(code => code.length > 0)
-                    .map(code => parseInt(code, 16));
-                    
-                if (codePoints.length === 0) {
-                    return unicodeStr;
-                }
-                
-                return String.fromCodePoint(...codePoints);
-            } catch (error) {
-                console.warn('유니코드 변환 실패:', unicodeStr, error);
-                return unicodeStr;
-            }
-        }
-
-        // 국가 코드를 국기 이모지로 변환
-        function countryCodeToFlag(countryCode) {
-            if (!countryCode || countryCode.length !== 2) {
-                return '🏳️';
-            }
-            
-            const codePoints = countryCode
-                .toUpperCase()
-                .split('')
-                .map(char => 127397 + char.charCodeAt(0));
-            
-            return String.fromCodePoint(...codePoints);
-        }
-
-        // 대카테고리 표시 전환
-        function showEmojiCategories() {
-            // 대카테고리 버튼 활성화
-            document.getElementById('emojiBtn').classList.add('active');
-            document.getElementById('symbolBtn').classList.remove('active');
-            
-            // 하위 카테고리 표시 전환
-            document.getElementById('emojiCategories').style.display = 'flex';
-            document.getElementById('symbolCategories').style.display = 'none';
-            
-            // 기본적으로 전체 이모지 표시
-            selectCategory('all', 'emoji');
-        }
-
-        function showSymbolCategories() {
-            // 대카테고리 버튼 활성화
-            document.getElementById('symbolBtn').classList.add('active');
-            document.getElementById('emojiBtn').classList.remove('active');
-            
-            // 하위 카테고리 표시 전환
-            document.getElementById('symbolCategories').style.display = 'flex';
-            document.getElementById('emojiCategories').style.display = 'none';
-            
-            // 기본적으로 전체 특수기호 표시
-            selectCategory('all', 'symbol');
-        }
-
-        // 카테고리 선택
-        function selectCategory(category, mode) {
-            currentMode = mode;
-            currentCategory = category;
-            
-            // 하위 카테고리 버튼 활성화 상태 업데이트
-            const parentId = mode === 'emoji' ? 'emojiCategories' : 'symbolCategories';
-            const buttons = document.querySelectorAll('#' + parentId + ' .sub-category-btn');
-            
-            buttons.forEach(btn => btn.classList.remove('active'));
-            event.target.classList.add('active');
-            
-            // 필터링된 아이템 준비
-            filteredItems = [];
-            
-            if (mode === 'emoji') {
-                if (category === 'all') {
-                    // 전체 이모지 표시
-                    for (let i = 0; i < allEmojis.length; i++) {
-                        filteredItems.push({
-                            text: allEmojis[i].emoji,
-                            name_ko: allEmojis[i].name_ko,
-                            category: allEmojis[i].category
-                        });
-                    }
-                } else {
-                    // 특정 이모지 카테고리 표시
-                    for (let i = 0; i < allEmojis.length; i++) {
-                        if (allEmojis[i].category === category) {
-                            filteredItems.push({
-                                text: allEmojis[i].emoji,
-                                name_ko: allEmojis[i].name_ko,
-                                category: allEmojis[i].category
-                            });
-                        }
-                    }
-                }
-            } else {
-                if (category === 'all') {
-                    // 전체 특수기호 표시
-                    for (let i = 0; i < allSymbols.length; i++) {
-                        filteredItems.push({
-                            text: allSymbols[i].symbol,
-                            name_ko: allSymbols[i].name_ko,
-                            category: allSymbols[i].category
-                        });
-                    }
-                } else {
-                    // 특정 특수기호 카테고리 표시
-                    for (let i = 0; i < allSymbols.length; i++) {
-                        if (allSymbols[i].category === category) {
-                            filteredItems.push({
-                                text: allSymbols[i].symbol,
-                                name_ko: allSymbols[i].name_ko,
-                                category: allSymbols[i].category
-                            });
-                        }
-                    }
-                }
+                document.getElementById('symbolButton').classList.add('active');
+                document.getElementById('emojiButton').classList.remove('active');
+                currentItems = symbolData[category] || [];
             }
             
             displayItems(true);
         }
 
-        // 데이터 로드
-        function loadEmojis() {
-            console.log('이모지 데이터 로드 시작');
-            
-            if (typeof fetch === 'undefined') {
-                console.error('이 브라우저는 fetch를 지원하지 않습니다.');
-                document.getElementById('emojiGrid').innerHTML = '<div class="loading">브라우저가 지원되지 않습니다.</div>';
-                return;
-            }
-            
-            fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vTc7jzLftQBL-UUnwIHYR4yXHLp-fX3OKB0cE8l9tWKjCAr_Y_IpzO6P_aAbp6MZ_s2Qt26PC_71CVX/pub?gid=840637915&single=true&output=csv')
-            .then(function(response) {
-                if (!response.ok) {
-                    throw new Error('네트워크 응답이 좋지 않습니다');
-                }
-                return response.text();
-            })
-            .then(function(csvText) {
-                console.log('CSV 데이터 로드 완료');
-                
-                const lines = csvText.split('\n');
-                allEmojis = [];
-                
-                for (let i = 1; i < lines.length; i++) {
-                    const line = lines[i].trim();
-                    if (!line) continue;
-                    
-                    const cleanLine = line.replace(/"/g, '');
-                    const fields = cleanLine.split(',');
-                    
-                    if (fields.length < 5) continue;
-                    
-                    const category = fields[1] ? fields[1].trim() : '';
-                    let emoji = fields[3] ? fields[3].trim() : '';
-                    const nameKo = fields[5] ? fields[5].trim() : '';
-                    
-                    // 유니코드 코드포인트를 실제 이모지로 변환
-                    if (emoji && emoji.includes('U+')) {
-                        emoji = unicodeToEmoji(emoji);
-                    }
-                    // 2글자 국가 코드를 국기로 변환
-                    else if (emoji && emoji.length === 2 && /^[A-Z]{2}$/.test(emoji) && 
-                             (category === '깃발' || category === 'Flags')) {
-                        emoji = countryCodeToFlag(emoji);
-                    }
-                    
-                    if (emoji && category) {
-                        allEmojis.push({
-                            emoji: emoji,
-                            name_ko: nameKo || '이모지',
-                            category: category
-                        });
-                    }
-                }
-                
-                console.log('총 ' + allEmojis.length + '개 이모지 로드 완료');
-                
-                // 기본적으로 이모지 전체 표시
-                showEmojiCategories();
-            })
-            .catch(function(error) {
-                console.error('로드 오류:', error);
-                document.getElementById('emojiGrid').innerHTML = '<div class="loading">로드 실패: ' + error.message + '</div>';
-            });
-        }
-
-        // 카테고리 필터링
-        function filterCategory(category) {
-            displayedCount = 0;
-            
-            // 필터링된 아이템 준비
-            filteredItems = [];
-            
-            // 특수기호 카테고리인지 확인
-            const symbolCategories = ['수학기호', '화살표', '통화기호', '그리스문자'];
-            
-            if (symbolCategories.includes(category)) {
-                // 특수기호 필터링
-                for (let i = 0; i < allSymbols.length; i++) {
-                    if (allSymbols[i].category === category) {
-                        filteredItems.push({
-                            text: allSymbols[i].symbol,
-                            name_ko: allSymbols[i].name_ko,
-                            category: allSymbols[i].category
-                        });
-                    }
-                }
-            } else {
-                // 이모지 필터링
-                for (let i = 0; i < allEmojis.length; i++) {
-                    if (allEmojis[i].category === category) {
-                        filteredItems.push({
-                            text: allEmojis[i].emoji,
-                            name_ko: allEmojis[i].name_ko,
-                            category: allEmojis[i].category
-                        });
-                    }
-                }
-            }
-            
-            displayItems(true);
-        }
-
-        // 아이템 표시 (페이지네이션 포함)
         function displayItems(reset = false) {
             const grid = document.getElementById('emojiGrid');
-            if (!grid) return;
             
             if (reset) {
                 grid.innerHTML = '';
                 displayedCount = 0;
             }
             
-            if (filteredItems.length === 0) {
-                grid.innerHTML = '<div class="loading">아이템이 없습니다</div>';
+            if (currentItems.length === 0) {
+                grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 50px; color: #999;">카테고리를 선택하세요</div>';
                 document.getElementById('loadMoreContainer').style.display = 'none';
                 return;
             }
             
-            const endIndex = Math.min(displayedCount + ITEMS_PER_PAGE, filteredItems.length);
+            const endIndex = Math.min(displayedCount + ITEMS_PER_PAGE, currentItems.length);
             
             for (let i = displayedCount; i < endIndex; i++) {
-                const item = filteredItems[i];
+                const item = currentItems[i];
                 const div = document.createElement('div');
                 div.className = 'emoji-item';
-                div.title = item.name_ko;
+                div.onclick = () => copyItem(item);
                 
                 const span = document.createElement('span');
                 span.className = 'emoji';
-                span.appendChild(document.createTextNode(item.text));
+                span.textContent = item;
                 
                 div.appendChild(span);
-                
-                (function(text, name) {
-                    addCompatibleEventListener(div, 'click', function() {
-                        copyItem(text, name);
-                    });
-                    addCompatibleEventListener(div, 'touchend', function(e) {
-                        if (e.preventDefault) e.preventDefault();
-                        copyItem(text, name);
-                    });
-                })(item.text, item.name_ko);
-                
                 grid.appendChild(div);
             }
             
             displayedCount = endIndex;
             updateLoadMoreButton();
-            
-            console.log('표시 중:', displayedCount + '/' + filteredItems.length + '개 아이템');
         }
 
-        // 더보기 버튼 상태 업데이트
         function updateLoadMoreButton() {
             const container = document.getElementById('loadMoreContainer');
-            const btn = document.getElementById('loadMoreBtn');
             const remainingSpan = document.getElementById('remainingCount');
             
-            const remaining = filteredItems.length - displayedCount;
+            const remaining = currentItems.length - displayedCount;
             
             if (remaining > 0) {
                 container.style.display = 'block';
                 remainingSpan.textContent = remaining;
-                btn.disabled = false;
             } else {
                 container.style.display = 'none';
             }
         }
 
-        // 더보기 버튼 클릭
         function loadMoreItems() {
             displayItems(false);
         }
 
-        // 복사 기능
-        function copyItem(item, name) {
-            clipboardEmojis.push(item);
+        function copyItem(item) {
+            clipboardItems.push(item);
             updateClipboard();
             
-            const browserInfo = getBrowserInfo();
-            
-            if (navigator.clipboard && navigator.clipboard.writeText && window.isSecureContext) {
-                navigator.clipboard.writeText(item).then(function() {
+            // 클립보드에 복사
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(item).then(() => {
                     showToast(item + ' 복사됨!');
-                }).catch(function() {
+                }).catch(() => {
                     fallbackCopy(item);
                 });
-            } else if (document.execCommand) {
-                fallbackCopy(item);
             } else {
-                if (browserInfo.isInApp) {
-                    showToast('앱 내 브라우저에서는 자동 복사가 제한됩니다. ' + item + ' 을(를) 길게 눌러 복사하세요.');
-                } else {
-                    showToast('이 브라우저에서는 자동 복사가 지원되지 않습니다.');
-                }
+                fallbackCopy(item);
             }
         }
 
-        // 폴백 복사
         function fallbackCopy(text) {
             const textarea = document.createElement('textarea');
             textarea.value = text;
             textarea.style.position = 'fixed';
-            textarea.style.left = '-9999px';
-            textarea.style.top = '-9999px';
             textarea.style.opacity = '0';
-            
             document.body.appendChild(textarea);
-            textarea.focus();
             textarea.select();
             
-            if (navigator.userAgent.match(/ipad|iphone/i)) {
-                const range = document.createRange();
-                range.selectNodeContents(textarea);
-                const selection = window.getSelection();
-                selection.removeAllRanges();
-                selection.addRange(range);
-                textarea.setSelectionRange(0, 999999);
-            }
-            
             try {
-                const successful = document.execCommand('copy');
-                if (successful) {
-                    showToast(text + ' 복사됨!');
-                } else {
-                    showToast('복사 실패 - 수동으로 복사해주세요');
-                }
+                document.execCommand('copy');
+                showToast(text + ' 복사됨!');
             } catch (err) {
-                console.error('복사 실패:', err);
-                showToast('복사 실패 - 수동으로 복사해주세요');
+                showToast('복사 실패');
             }
             
             document.body.removeChild(textarea);
         }
 
-        // 클립보드 업데이트
         function updateClipboard() {
             const clipboard = document.getElementById('clipboard');
-            if (!clipboard) return;
             
-            if (clipboardEmojis.length === 0) {
+            if (clipboardItems.length === 0) {
                 clipboard.innerHTML = '<span style="color: #999;">복사한 이모지가 여기에 표시됩니다</span>';
             } else {
-                clipboard.innerHTML = '';
-                clipboard.appendChild(document.createTextNode(clipboardEmojis.join(' ')));
+                clipboard.textContent = clipboardItems.join(' ');
             }
         }
 
-        // 클립보드 지우기
         function clearClipboard() {
-            clipboardEmojis = [];
+            clipboardItems = [];
             updateClipboard();
             showToast('클립보드 초기화');
         }
 
-        // 토스트 메시지
         function showToast(message) {
             const toast = document.getElementById('toast');
-            if (!toast) return;
-            
-            toast.innerHTML = '';
-            toast.appendChild(document.createTextNode(message));
+            toast.textContent = message;
             toast.classList.add('show');
             
-            setTimeout(function() {
+            setTimeout(() => {
                 toast.classList.remove('show');
             }, 1500);
         }
 
-        // 전역 함수 노출
-        window.showEmojiCategories = showEmojiCategories;
-        window.showSymbolCategories = showSymbolCategories;
-        window.selectCategory = selectCategory;
-        window.loadMoreItems = loadMoreItems;
-        window.copyItem = copyItem;
-        window.clearClipboard = clearClipboard;
+        // 외부 클릭시 드롭다운 닫기
+        document.addEventListener('click', (event) => {
+            if (!event.target.closest('.dropdown-wrapper')) {
+                document.getElementById('emojiDropdown').classList.remove('show');
+                document.getElementById('symbolDropdown').classList.remove('show');
+                document.getElementById('emojiButton').classList.remove('open');
+                document.getElementById('symbolButton').classList.remove('open');
+            }
+        });
 
         // 초기화
-        function initializeApp() {
-            console.log('앱 초기화 시작');
-            updateClipboard();
-            loadEmojis();
-        }
-
-        // DOM 로드 이벤트
-        if (document.readyState === 'loading') {
-            if (document.addEventListener) {
-                document.addEventListener('DOMContentLoaded', initializeApp);
-            } else if (document.attachEvent) {
-                document.attachEvent('onreadystatechange', function() {
-                    if (document.readyState === 'complete') {
-                        initializeApp();
-                    }
-                });
-            }
-        } else {
-            initializeApp();
-        }
-
-        if (window.addEventListener) {
-            window.addEventListener('load', initializeApp);
-        } else if (window.attachEvent) {
-            window.attachEvent('onload', initializeApp);
-        }
+        window.onload = () => {
+            // 초기 상태 설정
+            displayItems(true);
+        };
     </script>
 </body>
 </html>
