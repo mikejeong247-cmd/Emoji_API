@@ -146,8 +146,7 @@
             transform: translateY(-10px);
             transition: all 0.3s ease;
             z-index: 1000;
-            max-height: 300px;
-            overflow-y: auto;
+            overflow: visible;
         }
 
         .dropdown-menu.show {
@@ -197,14 +196,15 @@
             visibility: hidden;
             transform: translateX(-10px);
             transition: all 0.3s ease;
-            min-width: 200px;
+            min-width: 220px;
             z-index: 1001;
+            white-space: nowrap;
         }
 
-        .dropdown-item:hover .submenu {
+        .dropdown-item.has-submenu:hover .submenu {
             opacity: 1;
             visibility: visible;
-            transform: translateX(0);
+            transform: translateX(5px);
         }
 
         .submenu-item {
@@ -434,6 +434,13 @@
                 transform: translate(-50%, -50%);
                 width: 80%;
                 max-width: 300px;
+                z-index: 1002;
+            }
+
+            .dropdown-item.has-submenu:hover .submenu {
+                opacity: 1;
+                visibility: visible;
+                transform: translate(-50%, -50%);
             }
         }
 
@@ -474,12 +481,12 @@
         <div class="category-section">
             <div class="dropdown-container">
                 <button class="dropdown-button" onclick="toggleDropdown()">
-                    <span id="selectedCategory">😀 스마일리 및 감정</span>
+                    <span id="selectedCategory">😀 이모지</span>
                     <span class="dropdown-arrow">▼</span>
                 </button>
                 <div class="dropdown-menu" id="dropdownMenu">
                     <!-- 이모지 대카테고리 -->
-                    <div class="dropdown-item has-submenu">
+                    <div class="dropdown-item has-submenu" onclick="selectMainCategory('emoji')">
                         😀 이모지
                         <div class="submenu">
                             <div class="submenu-item" onclick="selectCategory('스마일리 및 감정')">😀 스마일리 및 감정</div>
@@ -494,7 +501,7 @@
                         </div>
                     </div>
                     <!-- 특수기호 대카테고리 -->
-                    <div class="dropdown-item has-submenu">
+                    <div class="dropdown-item has-submenu" onclick="selectMainCategory('symbol')">
                         ∑ 특수기호
                         <div class="submenu">
                             <div class="submenu-item" onclick="selectCategory('수학기호')">∑ 수학기호</div>
@@ -545,7 +552,8 @@
         let allEmojis = [];
         let allSymbols = [];
         let clipboardEmojis = [];
-        let currentCategory = '스마일리 및 감정';
+        let currentMode = 'emoji'; // 'emoji' 또는 'symbol'
+        let currentCategory = 'all';
         let filteredItems = [];
         let displayedCount = 0;
         const ITEMS_PER_PAGE = 70;
@@ -685,7 +693,45 @@
             menu.classList.toggle('show');
         }
 
-        // 카테고리 선택
+        // 대카테고리 선택 (이모지 전체 or 특수기호 전체)
+        function selectMainCategory(mode) {
+            currentMode = mode;
+            currentCategory = 'all';
+            
+            if (mode === 'emoji') {
+                document.getElementById('selectedCategory').textContent = '😀 이모지';
+                // 전체 이모지 표시
+                filteredItems = [];
+                for (let i = 0; i < allEmojis.length; i++) {
+                    filteredItems.push({
+                        text: allEmojis[i].emoji,
+                        name_ko: allEmojis[i].name_ko,
+                        category: allEmojis[i].category
+                    });
+                }
+            } else {
+                document.getElementById('selectedCategory').textContent = '∑ 특수기호';
+                // 전체 특수기호 표시
+                filteredItems = [];
+                for (let i = 0; i < allSymbols.length; i++) {
+                    filteredItems.push({
+                        text: allSymbols[i].symbol,
+                        name_ko: allSymbols[i].name_ko,
+                        category: allSymbols[i].category
+                    });
+                }
+            }
+            
+            // 드롭다운 닫기
+            const button = document.querySelector('.dropdown-button');
+            const menu = document.getElementById('dropdownMenu');
+            button.classList.remove('open');
+            menu.classList.remove('show');
+            
+            displayItems(true);
+        }
+
+        // 하위카테고리 선택
         function selectCategory(category) {
             currentCategory = category;
             const icon = categoryIcons[category] || '📁';
@@ -768,8 +814,8 @@
                 
                 console.log('총 ' + allEmojis.length + '개 이모지 로드 완료');
                 
-                // 첫 로딩시 스마일리 및 감정 카테고리 표시
-                filterCategory('스마일리 및 감정');
+                // 기본값: 이모지 전체 표시
+                selectMainCategory('emoji');
             })
             .catch(function(error) {
                 console.error('로드 오류:', error);
@@ -982,6 +1028,7 @@
 
         // 전역 함수 노출
         window.toggleDropdown = toggleDropdown;
+        window.selectMainCategory = selectMainCategory;
         window.selectCategory = selectCategory;
         window.loadMoreItems = loadMoreItems;
         window.copyItem = copyItem;
