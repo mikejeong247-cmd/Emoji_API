@@ -1,27 +1,4 @@
 let allEmojis = [];
-// 유니코드 변환 함수 추가
-function unicodeToEmoji(unicodeStr) {
-    if (!unicodeStr || !unicodeStr.includes('U+')) {
-        return unicodeStr;
-    }
-    
-    try {
-        const codePoints = unicodeStr
-            .split(' ')
-            .map(code => code.replace('U+', ''))
-            .filter(code => code.length > 0)
-            .map(code => parseInt(code, 16));
-            
-        if (codePoints.length === 0) {
-            return unicodeStr;
-        }
-        
-        return String.fromCodePoint(...codePoints);
-    } catch (error) {
-        console.warn('유니코드 변환 실패:', unicodeStr, error);
-        return unicodeStr;
-    }
-}
 let clipboardEmojis = [];
 let currentCategory = 'all';
 
@@ -71,7 +48,31 @@ function addCompatibleEventListener(element, eventType, handler) {
     }
 }
 
-// 데이터 로드 - 호환성 개선
+// 유니코드 변환 함수
+function unicodeToEmoji(unicodeStr) {
+    if (!unicodeStr || !unicodeStr.includes('U+')) {
+        return unicodeStr;
+    }
+    
+    try {
+        const codePoints = unicodeStr
+            .split(' ')
+            .map(code => code.replace('U+', ''))
+            .filter(code => code.length > 0)
+            .map(code => parseInt(code, 16));
+            
+        if (codePoints.length === 0) {
+            return unicodeStr;
+        }
+        
+        return String.fromCodePoint(...codePoints);
+    } catch (error) {
+        console.warn('유니코드 변환 실패:', unicodeStr, error);
+        return unicodeStr;
+    }
+}
+
+// 데이터 로드 - 호환성 개선 + 국기 수정
 function loadEmojis() {
     console.log('브라우저 호환성 모드로 데이터 로드...');
     console.log('브라우저 정보:', getBrowserInfo());
@@ -106,8 +107,14 @@ function loadEmojis() {
             if (fields.length < 5) continue;
             
             const category = fields[1] ? fields[1].trim() : '';
-            const emoji = fields[3] ? fields[3].trim() : '';
+            let emoji = fields[3] ? fields[3].trim() : '';
             const nameKo = fields[5] ? fields[5].trim() : '';
+            
+            // 유니코드 코드포인트를 실제 이모지로 변환
+            if (emoji && emoji.includes('U+')) {
+                emoji = unicodeToEmoji(emoji);
+                console.log('유니코드 변환:', fields[3], '→', emoji);
+            }
             
             if (emoji && category) {
                 allEmojis.push({
