@@ -412,39 +412,32 @@
             'Component': { icon: '🔲', nameKo: '구성요소' }
         };
 
-        // 특수기호 데이터
-        allSymbols = [
-            {symbol: '∑', name_ko: '시그마 합계', category: '수학기호'},
-            {symbol: '∞', name_ko: '무한대', category: '수학기호'},
-            {symbol: '∂', name_ko: '편미분', category: '수학기호'},
-            {symbol: '∫', name_ko: '적분', category: '수학기호'},
-            {symbol: '√', name_ko: '제곱근', category: '수학기호'},
-            {symbol: '±', name_ko: '플러스마이너스', category: '수학기호'},
-            {symbol: '≤', name_ko: '작거나 같음', category: '수학기호'},
-            {symbol: '≥', name_ko: '크거나 같음', category: '수학기호'},
-            {symbol: '≠', name_ko: '같지 않음', category: '수학기호'},
-            {symbol: '≈', name_ko: '근사', category: '수학기호'},
-            {symbol: '→', name_ko: '오른쪽 화살표', category: '화살표'},
-            {symbol: '←', name_ko: '왼쪽 화살표', category: '화살표'},
-            {symbol: '↑', name_ko: '위쪽 화살표', category: '화살표'},
-            {symbol: '↓', name_ko: '아래쪽 화살표', category: '화살표'},
-            {symbol: '↔', name_ko: '양방향 화살표', category: '화살표'},
-            {symbol: '⇒', name_ko: '이중 오른쪽 화살표', category: '화살표'},
-            {symbol: '⇐', name_ko: '이중 왼쪽 화살표', category: '화살표'},
-            {symbol: '⇔', name_ko: '이중 양방향 화살표', category: '화살표'},
-            {symbol: '$', name_ko: '달러', category: '통화기호'},
-            {symbol: '€', name_ko: '유로', category: '통화기호'},
-            {symbol: '¥', name_ko: '엔', category: '통화기호'},
-            {symbol: '£', name_ko: '파운드', category: '통화기호'},
-            {symbol: '₩', name_ko: '원', category: '통화기호'},
-            {symbol: '¢', name_ko: '센트', category: '통화기호'},
-            {symbol: 'α', name_ko: '알파', category: '그리스문자'},
-            {symbol: 'β', name_ko: '베타', category: '그리스문자'},
-            {symbol: 'γ', name_ko: '감마', category: '그리스문자'},
-            {symbol: 'δ', name_ko: '델타', category: '그리스문자'},
-            {symbol: 'π', name_ko: '파이', category: '그리스문자'},
-            {symbol: 'ω', name_ko: '오메가', category: '그리스문자'}
-        ];
+        // 특수기호 카테고리별 대표 아이콘
+        const symbolCategoryIcons = {
+            '수학기호': '∑',
+            '화살표': '→',
+            '통화기호': '$',
+            '그리스문자': 'α',
+            '괄호': '(',
+            '문장부호': '.',
+            '단위기호': '℃',
+            '음악기호': '♪',
+            '천문기호': '☉',
+            '기타기호': '※',
+            '원문자': '①',
+            '로마숫자': 'Ⅰ',
+            '분수': '½',
+            '상표/저작권': '©',
+            '체크/선택': '✓',
+            '별표시': '★',
+            '카드기호': '♠',
+            '날씨기호': '☀',
+            '종교기호': '✝',
+            '십이지신': '子',
+            '한글자모': 'ㄱ',
+            '일본어': 'あ',
+            '중국어': '中'
+        };
 
         // 유니코드 변환
         function unicodeToEmoji(unicodeStr) {
@@ -484,7 +477,7 @@
             return String.fromCodePoint(...codePoints);
         }
 
-        // 데이터 로드
+        // 이모지 데이터 로드
         function loadEmojis() {
             console.log('이모지 데이터 로드 시작');
             
@@ -532,6 +525,57 @@
                 
                 console.log('총 ' + allEmojis.length + '개 이모지 로드 완료');
                 
+                // 특수기호 데이터도 로드
+                loadSymbols();
+            })
+            .catch(error => {
+                console.error('이모지 로드 오류:', error);
+                document.getElementById('emojiGrid').innerHTML = '<div class="loading">데이터 로드 실패: ' + error.message + '</div>';
+            });
+        }
+
+        // 특수기호 데이터 로드
+        function loadSymbols() {
+            console.log('특수기호 데이터 로드 시작');
+            
+            fetch('https://docs.google.com/spreadsheets/d/1FIdy5qPmAoDBBpQDqVdwk-Rhnj3rukoZXyYJ-BdnUtw/gviz/tq?tqx=out:csv&sheet=Sign')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('네트워크 응답이 좋지 않습니다');
+                }
+                return response.text();
+            })
+            .then(csvText => {
+                console.log('특수기호 CSV 데이터 로드 완료');
+                
+                const lines = csvText.split('\n');
+                allSymbols = [];
+                
+                for (let i = 1; i < lines.length; i++) {
+                    const line = lines[i].trim();
+                    if (!line) continue;
+                    
+                    // CSV 파싱 (따옴표 처리)
+                    const matches = line.match(/(?:[^,"]|"(?:[^"]|"")*")+/g);
+                    if (!matches || matches.length < 3) continue;
+                    
+                    const fields = matches.map(field => field.replace(/^"|"$/g, '').replace(/""/g, '"').trim());
+                    
+                    const category = fields[0] || '';
+                    const symbol = fields[1] || '';
+                    const nameKo = fields[2] || '';
+                    
+                    if (symbol && category) {
+                        allSymbols.push({
+                            symbol: symbol,
+                            name_ko: nameKo || '특수기호',
+                            category: category
+                        });
+                    }
+                }
+                
+                console.log('총 ' + allSymbols.length + '개 특수기호 로드 완료');
+                
                 // 드롭다운 메뉴 생성
                 createDropdownMenus();
                 
@@ -539,8 +583,10 @@
                 selectCategory('Smileys & Emotion', 'emoji');
             })
             .catch(error => {
-                console.error('로드 오류:', error);
-                document.getElementById('emojiGrid').innerHTML = '<div class="loading">데이터 로드 실패: ' + error.message + '</div>';
+                console.error('특수기호 로드 오류:', error);
+                // 특수기호 로드 실패해도 이모지는 동작하도록
+                createDropdownMenus();
+                selectCategory('Smileys & Emotion', 'emoji');
             });
         }
 
@@ -577,19 +623,14 @@
             const symbolDropdown = document.getElementById('symbolDropdown');
             symbolDropdown.innerHTML = '';
             
-            const symbolIcons = {
-                '수학기호': '∑',
-                '화살표': '→',
-                '통화기호': '$',
-                '그리스문자': 'α'
-            };
-            
             symbolCategories.forEach(category => {
                 const div = document.createElement('div');
                 div.className = 'dropdown-item';
                 
+                const icon = symbolCategoryIcons[category] || '◆';
+                
                 div.innerHTML = `
-                    <span class="category-icon">${symbolIcons[category] || '?'}</span>
+                    <span class="category-icon">${icon}</span>
                     <span>${category}</span>
                 `;
                 
