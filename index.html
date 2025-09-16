@@ -1,4 +1,90 @@
-<!DOCTYPE html>
+// 외부 클릭시 드롭다운 닫기
+        document.addEventListener('click', function(event) {
+            const dropdown1 = document.querySelectorAll('.dropdown-container')[0];
+            const dropdown2 = document.querySelectorAll('.dropdown-container')[1];
+            
+            // 이모지 드롭다운 닫기
+            if (dropdown1 && !dropdown1.contains(event.target)) {
+                const button1 = document.querySelectorAll('.dropdown-button')[0];
+                const menu1 = document.getElementById('dropdownMenu');
+                if (button1) button1.classList.remove('open');
+                if (menu1) menu1.classList.remove('show');
+            }
+            
+            // 특수기호 드롭다운 닫기
+            if (dropdown2 && !dropdown2.contains(event.target)) {
+                const button2 = document.querySelectorAll('.dropdown-button')[1];
+                const menu2 = document.getElementById('symbolDropdownMenu');
+                if (button2) button2.classList.remove('open');
+                if (menu2) menu2.classList.remove('show');
+            }
+        });
+
+        // 데이터 로드
+        function loadEmojis() {
+            console.log('이모지 데이터 로드 시작');
+            
+            if (typeof fetch === 'undefined') {
+                console.error('이 브라우저는 fetch를 지원하지 않습니다.');
+                document.getElementById('emojiGrid').innerHTML = '<div class="loading">브라우저가 지원되지 않습니다.</div>';
+                return;
+            }
+            
+            fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vTc7jzLftQBL-UUnwIHYR4yXHLp-fX3OKB0cE8l9tWKjCAr_Y_IpzO6P_aAbp6MZ_s2Qt26PC_71CVX/pub?gid=840637915&single=true&output=csv')
+            .then(function(response) {
+                if (!response.ok) {
+                    throw new Error('네트워크 응답이 좋지 않습니다');
+                }
+                return response.text();
+            })
+            .then(function(csvText) {
+                console.log('CSV 데이터 로드 완료');
+                
+                const lines = csvText.split('\n');
+                allEmojis = [];
+                
+                for (let i = 1; i < lines.length; i++) {
+                    const line = lines[i].trim();
+                    if (!line) continue;
+                    
+                    const cleanLine = line.replace(/"/g, '');
+                    const fields = cleanLine.split(',');
+                    
+                    if (fields.length < 5) continue;
+                    
+                    const category = fields[1] ? fields[1].trim() : '';
+                    let emoji = fields[3] ? fields[3].trim() : '';
+                    const nameKo = fields[5] ? fields[5].trim() : '';
+                    
+                    // 유니코드 코드포인트를 실제 이모지로 변환
+                    if (emoji && emoji.includes('U+')) {
+                        emoji = unicodeToEmoji(emoji);
+                    }
+                    // 2글자 국가 코드를 국기로 변환
+                    else if (emoji && emoji.length === 2 && /^[A-Z]{2}$/.test(emoji) && 
+                             (category === '깃발' || category === 'Flags')) {
+                        emoji = countryCodeToFlag(emoji);
+                    }
+                    
+                    if (emoji && category) {
+                        allEmojis.push({
+                            emoji: emoji,
+                            name_ko: nameKo || '이모지',
+                            category: category
+                        });
+                    }
+                }
+                
+                console.log('총 ' + allEmojis.length + '개 이모지 로드 완료');
+                
+                // 기본값: 이모지 전체 표시
+                selectCategory('all', 'emoji');
+            })
+            .catch(function(error) {
+                console.error('로드 오류:', error);
+                document.getElementById('emojiGrid').innerHTML = '<div class="loading">로드 실패: ' + error.message + '</div>';
+            });
+        }<!DOCTYPE html>
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
