@@ -24,7 +24,7 @@
             margin: 0 auto;
             padding: 20px;
             min-height: calc(100vh - 120px);
-            padding-top: 120px;
+            padding-top: 160px;
         }
 
         .clipboard-section {
@@ -226,7 +226,7 @@
         }
 
         .load-more-btn {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #ff4757;
             color: white;
             border: none;
             padding: 15px 30px;
@@ -238,7 +238,7 @@
         }
 
         .load-more-btn:hover {
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+            background: #ff3742;
             transform: translateY(-2px);
         }
 
@@ -334,7 +334,7 @@
         @media (max-width: 768px) {
             .container {
                 padding: 15px;
-                padding-top: 140px;
+                padding-top: 180px;
             }
 
             .clipboard-section {
@@ -414,7 +414,7 @@
     <div class="container">
         <div class="category-dropdown">
             <button class="dropdown-button" onclick="toggleDropdown()">
-                <span id="selectedCategory">😀 스마일리 및 감정</span>
+                <span id="selectedCategory">😀 이모지</span>
                 <span class="dropdown-arrow">▼</span>
             </button>
             <div class="dropdown-menu" id="dropdownMenu">
@@ -438,15 +438,15 @@
             <p>© 2024 이모지 모음. 모든 이모지는 해당 출처의 저작권을 따릅니다.</p>
             <p>이모지 데이터 출처:</p>
             <div class="emoji-sources">
-                <a href="https://twemoji.twitter.com/" target="_blank" class="source-link">
-                    🐦 Twemoji (Twitter)
-                </a>
-                <a href="https://openmoji.org/" target="_blank" class="source-link">
-                    🎨 OpenMoji
-                </a>
-                <a href="https://unicode.org/emoji/" target="_blank" class="source-link">
-                    📝 Unicode Consortium
-                </a>
+                <span class="source-link">
+                    Twemoji (Twitter)
+                </span>
+                <span class="source-link">
+                    OpenMoji
+                </span>
+                <span class="source-link">
+                    Unicode Consortium
+                </span>
             </div>
             <p style="margin-top: 15px; font-size: 0.8rem; color: #999;">
                 이 웹사이트는 교육 및 개인 사용 목적으로 제작되었습니다.
@@ -632,11 +632,8 @@
                 }
                 
                 createCategoryDropdown();
-                // 첫 번째 카테고리로 초기화
-                const firstCategory = getUniqueCategories()[0];
-                if (firstCategory) {
-                    filterCategory(firstCategory);
-                }
+                // "이모지" (전체) 모드로 초기화
+                filterCategory('all');
             })
             .catch(function(error) {
                 console.error('로드 오류:', error);
@@ -667,6 +664,17 @@
             
             menu.innerHTML = '';
             
+            // "이모지" (전체) 옵션 추가
+            const allItem = document.createElement('div');
+            allItem.className = 'dropdown-item active';
+            allItem.appendChild(document.createTextNode('😀 이모지'));
+            addCompatibleEventListener(allItem, 'click', function() {
+                filterCategory('all');
+                toggleDropdown();
+            });
+            menu.appendChild(allItem);
+            
+            // 개별 카테고리들 추가
             for (let i = 0; i < categories.length; i++) {
                 const category = categories[i];
                 const icon = categoryIcons[category] || '📁';
@@ -693,23 +701,34 @@
             displayedCount = 0;
             
             // 선택된 카테고리 표시 업데이트
-            const icon = categoryIcons[category] || '📁';
-            document.getElementById('selectedCategory').textContent = icon + ' ' + category;
+            if (category === 'all') {
+                document.getElementById('selectedCategory').textContent = '😀 이모지';
+            } else {
+                const icon = categoryIcons[category] || '📁';
+                document.getElementById('selectedCategory').textContent = icon + ' ' + category;
+            }
             
             // 드롭다운 아이템 활성화 상태 업데이트
             const items = document.querySelectorAll('.dropdown-item');
             for (let i = 0; i < items.length; i++) {
                 items[i].classList.remove('active');
-                if (items[i].textContent.includes(category)) {
+                if ((category === 'all' && items[i].textContent.includes('이모지')) ||
+                    items[i].textContent.includes(category)) {
                     items[i].classList.add('active');
                 }
             }
             
             // 필터링된 이모지 준비
             filteredEmojis = [];
-            for (let i = 0; i < allEmojis.length; i++) {
-                if (allEmojis[i].category === category) {
-                    filteredEmojis.push(allEmojis[i]);
+            if (category === 'all') {
+                // 전체 이모지 표시
+                filteredEmojis = allEmojis.slice();
+            } else {
+                // 특정 카테고리만 표시
+                for (let i = 0; i < allEmojis.length; i++) {
+                    if (allEmojis[i].category === category) {
+                        filteredEmojis.push(allEmojis[i]);
+                    }
                 }
             }
             
