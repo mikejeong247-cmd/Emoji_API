@@ -546,13 +546,9 @@
                         <span class="dropdown-arrow">▼</span>
                     </button>
                     <div class="dropdown-menu" id="shortcutDropdown">
-                        <div class="dropdown-item has-submenu">
+                        <div class="dropdown-item" onclick="selectShortcut('windows')">
                             <span class="category-icon">🪟</span>
                             <span>Windows</span>
-                            <div class="submenu">
-                                <div class="submenu-item" onclick="selectShortcut('windows')">기본 단축키</div>
-                                <div class="submenu-item" onclick="selectWin10Shortcuts()">Windows 10</div>
-                            </div>
                         </div>
                         <div class="dropdown-item" onclick="selectShortcut('mac')">
                             <span class="category-icon">🍎</span>
@@ -782,72 +778,7 @@
             ]
         };
 
-        // 페이지 초기화 시 UI 텍스트 업데이트
-        function updateUILanguage() {
-            // 헤더
-            document.querySelector('.clipboard-header h3').textContent = '🎨 ' + t('toolCollection');
-            document.querySelector('.clear-btn').textContent = t('clear');
-            
-            // 클립보드 플레이스홀더
-            if (clipboardItems.length === 0) {
-                document.getElementById('clipboard').innerHTML = `<span style="color: #999;">${t('clipboardPlaceholder')}</span>`;
-            }
-            
-            // 버튼 텍스트
-            document.querySelector('#emojiButton span:first-child').textContent = '😀 ' + t('emoji');
-            document.querySelector('#symbolButton span:first-child').textContent = '∑ ' + t('symbols');
-            document.querySelector('#shortcutButton span:first-child').textContent = '⌨️ ' + t('shortcuts');
-            document.querySelectorAll('.category-button')[3].innerHTML = `<span>📝 ${t('textTools')}</span>`;
-            document.querySelectorAll('.category-button')[4].innerHTML = `<span>📱 ${t('qrGenerator')}</span>`;
-            
-            // 텍스트 도구 섹션
-            if (document.querySelector('#textToolsSection .tool-header h3')) {
-                document.querySelector('#textToolsSection .tool-header h3').textContent = t('textToolsTitle');
-                document.querySelector('#textToolsSection .close-tool').textContent = t('close');
-                document.getElementById('textInput').placeholder = t('textPlaceholder');
-                
-                const toolButtons = document.querySelectorAll('#textToolsSection .tool-btn');
-                if (toolButtons.length > 0) {
-                    toolButtons[0].textContent = t('reverse');
-                    toolButtons[1].textContent = t('mirror');
-                    toolButtons[2].textContent = t('count');
-                    toolButtons[3].textContent = t('uppercase');
-                    toolButtons[4].textContent = t('lowercase');
-                }
-                
-                document.querySelectorAll('.count-label')[0].textContent = t('totalCount');
-                document.querySelectorAll('.count-label')[1].textContent = t('noSpace');
-                document.querySelectorAll('.count-label')[2].textContent = t('wordCount');
-                document.querySelectorAll('.count-label')[3].textContent = t('uniqueWords');
-            }
-            
-            // QR 생성기 섹션
-            if (document.querySelector('#qrSection .tool-header h3')) {
-                document.querySelector('#qrSection .tool-header h3').textContent = t('qrGeneratorTitle');
-                document.querySelector('#qrSection .close-tool').textContent = t('close');
-                document.getElementById('qrInput').placeholder = t('qrPlaceholder');
-                document.querySelector('#qrSection .tool-btn').textContent = t('generateQR');
-            }
-            
-            // 단축키 섹션
-            if (document.getElementById('shortcutTitle')) {
-                document.getElementById('shortcutTitle').textContent = t('shortcutTitle');
-                document.querySelector('#shortcutSection .close-tool').textContent = t('close');
-            }
-            
-            // 더보기 버튼
-            const loadMoreBtn = document.querySelector('#loadMoreBtn');
-            if (loadMoreBtn) {
-                const remaining = document.getElementById('remainingCount').textContent;
-                loadMoreBtn.innerHTML = `${t('loadMore')} (+<span id="remainingCount">${remaining}</span>)`;
-            }
-            
-            // 로딩 메시지
-            const loadingDiv = document.querySelector('.loading');
-            if (loadingDiv) {
-                loadingDiv.textContent = t('loadingData');
-            }
-        }
+        // 유니코드 변환
         function unicodeToEmoji(unicodeStr) {
             if (!unicodeStr || !unicodeStr.includes('U+')) {
                 return unicodeStr;
@@ -1371,127 +1302,7 @@
             showToast('QR 코드가 생성되었습니다');
         }
 
-        // 단축키 데이터
-        const shortcutData = {
-            'windows': [
-                { action: '복사', keys: ['Ctrl', 'C'] },
-                { action: '붙여넣기', keys: ['Ctrl', 'V'] },
-                { action: '잘라내기', keys: ['Ctrl', 'X'] },
-                { action: '실행 취소', keys: ['Ctrl', 'Z'] },
-                { action: '다시 실행', keys: ['Ctrl', 'Y'] },
-                { action: '모두 선택', keys: ['Ctrl', 'A'] },
-                { action: '찾기', keys: ['Ctrl', 'F'] },
-                { action: '저장', keys: ['Ctrl', 'S'] },
-                { action: '새 파일', keys: ['Ctrl', 'N'] },
-                { action: '창 전환', keys: ['Alt', 'Tab'] }
-            ],
-            'mac': [
-                { action: '복사', keys: ['⌘', 'C'] },
-                { action: '붙여넣기', keys: ['⌘', 'V'] },
-                { action: '잘라내기', keys: ['⌘', 'X'] },
-                { action: '실행 취소', keys: ['⌘', 'Z'] },
-                { action: '다시 실행', keys: ['⌘', 'Shift', 'Z'] },
-                { action: '모두 선택', keys: ['⌘', 'A'] },
-                { action: '찾기', keys: ['⌘', 'F'] },
-                { action: '저장', keys: ['⌘', 'S'] },
-                { action: '새 파일', keys: ['⌘', 'N'] },
-                { action: '앱 전환', keys: ['⌘', 'Tab'] }
-            ],
-            'vscode': [
-                { action: '명령 팔레트', keys: ['Ctrl/⌘', 'Shift', 'P'] },
-                { action: '파일 열기', keys: ['Ctrl/⌘', 'O'] },
-                { action: '터미널 토글', keys: ['Ctrl/⌘', '`'] },
-                { action: '주석 토글', keys: ['Ctrl/⌘', '/'] },
-                { action: '다중 커서', keys: ['Alt/⌥', 'Click'] },
-                { action: '줄 복사', keys: ['Alt/⌥', 'Shift', '↓'] },
-                { action: '줄 이동', keys: ['Alt/⌥', '↓'] },
-                { action: '파일 검색', keys: ['Ctrl/⌘', 'P'] }
-            ],
-            'excel': [
-                { action: '셀 편집', keys: ['F2'] },
-                { action: '절대참조 전환', keys: ['F4'] },
-                { action: '시트 이동', keys: ['Ctrl', 'Page Up/Down'] },
-                { action: '열 전체 선택', keys: ['Ctrl', 'Space'] },
-                { action: '행 전체 선택', keys: ['Shift', 'Space'] },
-                { action: '서식 복사', keys: ['Ctrl', 'Shift', 'C'] },
-                { action: '값만 붙여넣기', keys: ['Ctrl', 'Alt', 'V'] },
-                { action: '필터 적용', keys: ['Ctrl', 'Shift', 'L'] }
-            ]
-        };
-
-        // Windows 10 단축키 로드
-        function selectWin10Shortcuts() {
-            hideAllSections();
-            document.getElementById('shortcutSection').style.display = 'block';
-            
-            // 드롭다운 닫기
-            document.getElementById('shortcutDropdown').classList.remove('show');
-            document.getElementById('shortcutButton').classList.remove('open');
-            
-            // 제목 업데이트
-            document.getElementById('shortcutTitle').textContent = '🪟 Windows 10 단축키';
-            
-            // 로딩 표시
-            const table = document.getElementById('shortcutTable');
-            table.innerHTML = '<div class="loading">단축키 데이터를 불러오는 중...</div>';
-            
-            // 스프레드시트에서 데이터 로드
-            const url = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTc7jzLftQBL-UUnwIHYR4yXHLp-fX3OKB0cE8l9tWKjCAr_Y_IpzO6P_aAbp6MZ_s2Qt26PC_71CVX/pub?gid=1189009821&single=true&output=csv';
-            
-            fetch(url)
-            .then(response => response.text())
-            .then(csvText => {
-                const lines = csvText.split('\n');
-                const shortcuts = [];
-                
-                // 헤더 스킵하고 데이터 파싱 (A열: Shortcut, C열: Description)
-                for (let i = 1; i < lines.length; i++) {
-                    const line = lines[i].trim();
-                    if (!line) continue;
-                    
-                    // CSV 파싱
-                    const fields = parseCSVLine(line);
-                    
-                    if (fields.length >= 3) {
-                        const shortcut = fields[0] ? fields[0].trim() : '';
-                        const description = fields[2] ? fields[2].trim() : '';
-                        
-                        if (shortcut && description) {
-                            shortcuts.push({
-                                shortcut: shortcut,
-                                description: description
-                            });
-                        }
-                    }
-                }
-                
-                // 테이블 생성
-                table.innerHTML = `
-                    <thead>
-                        <tr>
-                            <th>단축키</th>
-                            <th>설명</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${shortcuts.map(item => `
-                            <tr>
-                                <td><span class="shortcut-key">${item.shortcut}</span></td>
-                                <td>${item.description}</td>
-                            </tr>
-                        `).join('')}
-                    </tbody>
-                `;
-                
-                console.log('Windows 10 단축키 ' + shortcuts.length + '개 로드 완료');
-            })
-            .catch(error => {
-                console.error('Windows 10 단축키 로드 오류:', error);
-                table.innerHTML = '<div class="loading">데이터 로드 실패: ' + error.message + '</div>';
-            });
-        }
-
-        // 단축키 표시 (기존)
+        // 단축키 표시
         function selectShortcut(platform) {
             hideAllSections();
             document.getElementById('shortcutSection').style.display = 'block';
