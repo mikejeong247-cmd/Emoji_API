@@ -546,9 +546,13 @@
                         <span class="dropdown-arrow">▼</span>
                     </button>
                     <div class="dropdown-menu" id="shortcutDropdown">
-                        <div class="dropdown-item" onclick="selectShortcut('windows')">
+                        <div class="dropdown-item has-submenu">
                             <span class="category-icon">🪟</span>
                             <span>Windows</span>
+                            <div class="submenu">
+                                <div class="submenu-item" onclick="selectShortcut('windows')">기본 단축키</div>
+                                <div class="submenu-item" onclick="selectWin10Shortcuts()">Windows 10</div>
+                            </div>
                         </div>
                         <div class="dropdown-item" onclick="selectShortcut('mac')">
                             <span class="category-icon">🍎</span>
@@ -683,112 +687,6 @@
         let currentCategory = '';
         let qrCodeInstance = null;
         const ITEMS_PER_PAGE = 70;
-
-        // 언어 감지 및 번역
-        const userLang = navigator.language || navigator.userLanguage;
-        const isKorean = userLang.startsWith('ko');
-        const currentLang = isKorean ? 'ko' : 'en';
-
-        // 번역 데이터
-        const translations = {
-            ko: {
-                toolCollection: '도구 모음',
-                clear: '지우기',
-                clipboardPlaceholder: '복사한 이모지가 여기에 표시됩니다',
-                emoji: '이모지',
-                symbols: '특수기호',
-                shortcuts: '단축키',
-                textTools: '텍스트도구',
-                qrGenerator: 'QR생성',
-                close: '닫기',
-                loadingData: '데이터를 불러오는 중...',
-                loadMore: '더보기',
-                copied: '복사됨!',
-                copyFailed: '복사 실패',
-                clipboardReset: '클립보드 초기화',
-                textToolsTitle: '📝 텍스트 도구',
-                qrGeneratorTitle: '📱 QR 코드 생성기',
-                shortcutTitle: '⌨️ 단축키 모음',
-                textPlaceholder: '텍스트를 입력하세요...',
-                qrPlaceholder: 'URL 또는 텍스트를 입력하세요...',
-                generateQR: 'QR 코드 생성',
-                qrGenerated: 'QR 코드가 생성되었습니다',
-                enterText: '텍스트를 입력해주세요',
-                reverse: '↔️ 거꾸로',
-                mirror: '🪞 거울반전',
-                count: '🔢 글자수',
-                uppercase: '🔠 대문자',
-                lowercase: '🔡 소문자',
-                totalCount: '전체 글자수',
-                noSpace: '공백 제외',
-                wordCount: '단어 수',
-                uniqueWords: '중복 제외 단어',
-                function: '기능',
-                shortcutKeys: '단축키',
-                copy: '복사',
-                paste: '붙여넣기',
-                cut: '잘라내기',
-                undo: '실행 취소',
-                redo: '다시 실행',
-                selectAll: '모두 선택',
-                find: '찾기',
-                save: '저장',
-                newFile: '새 파일',
-                switchWindow: '창 전환',
-                switchApp: '앱 전환'
-            },
-            en: {
-                toolCollection: 'Tool Collection',
-                clear: 'Clear',
-                clipboardPlaceholder: 'Copied emojis will appear here',
-                emoji: 'Emoji',
-                symbols: 'Symbols',
-                shortcuts: 'Shortcuts',
-                textTools: 'Text Tools',
-                qrGenerator: 'QR Generate',
-                close: 'Close',
-                loadingData: 'Loading data...',
-                loadMore: 'Load More',
-                copied: 'Copied!',
-                copyFailed: 'Copy failed',
-                clipboardReset: 'Clipboard cleared',
-                textToolsTitle: '📝 Text Tools',
-                qrGeneratorTitle: '📱 QR Code Generator',
-                shortcutTitle: '⌨️ Keyboard Shortcuts',
-                textPlaceholder: 'Enter text here...',
-                qrPlaceholder: 'Enter URL or text...',
-                generateQR: 'Generate QR Code',
-                qrGenerated: 'QR Code generated',
-                enterText: 'Please enter text',
-                reverse: '↔️ Reverse',
-                mirror: '🪞 Mirror',
-                count: '🔢 Count',
-                uppercase: '🔠 Uppercase',
-                lowercase: '🔡 Lowercase',
-                totalCount: 'Total Characters',
-                noSpace: 'No Spaces',
-                wordCount: 'Word Count',
-                uniqueWords: 'Unique Words',
-                function: 'Function',
-                shortcutKeys: 'Shortcut Keys',
-                copy: 'Copy',
-                paste: 'Paste',
-                cut: 'Cut',
-                undo: 'Undo',
-                redo: 'Redo',
-                selectAll: 'Select All',
-                find: 'Find',
-                save: 'Save',
-                newFile: 'New File',
-                switchWindow: 'Switch Window',
-                switchApp: 'Switch App'
-            }
-        };
-
-        // 텍스트 가져오기 함수
-        function t(key) {
-            return translations[currentLang][key] || translations['ko'][key] || key;
-        }
 
         // 카테고리별 대표 이모지와 한국어명
         const categoryInfo = {
@@ -1295,7 +1193,7 @@
             
             if (navigator.clipboard && navigator.clipboard.writeText) {
                 navigator.clipboard.writeText(item).then(() => {
-                    showToast(item + ' ' + t('copied'));
+                    showToast(item + ' 복사됨!');
                 }).catch(() => {
                     fallbackCopy(item);
                 });
@@ -1314,9 +1212,9 @@
             
             try {
                 document.execCommand('copy');
-                showToast(text + ' ' + t('copied'));
+                showToast(text + ' 복사됨!');
             } catch (err) {
-                showToast(t('copyFailed'));
+                showToast('복사 실패');
             }
             
             document.body.removeChild(textarea);
@@ -1326,7 +1224,7 @@
             const clipboard = document.getElementById('clipboard');
             
             if (clipboardItems.length === 0) {
-                clipboard.innerHTML = `<span style="color: #999;">${t('clipboardPlaceholder')}</span>`;
+                clipboard.innerHTML = '<span style="color: #999;">복사한 이모지가 여기에 표시됩니다</span>';
             } else {
                 clipboard.textContent = clipboardItems.join(' ');
             }
@@ -1335,7 +1233,7 @@
         function clearClipboard() {
             clipboardItems = [];
             updateClipboard();
-            showToast(t('clipboardReset'));
+            showToast('클립보드 초기화');
         }
 
         function showToast(message) {
@@ -1454,7 +1352,7 @@
             const input = document.getElementById('qrInput').value;
             
             if (!input) {
-                showToast(t('enterText'));
+                showToast('텍스트를 입력해주세요');
                 return;
             }
             
@@ -1470,58 +1368,130 @@
                 correctLevel: QRCode.CorrectLevel.H
             });
             
-            showToast(t('qrGenerated'));
+            showToast('QR 코드가 생성되었습니다');
         }
 
-        // 단축키 데이터 (다국어)
+        // 단축키 데이터
         const shortcutData = {
             'windows': [
-                { action: currentLang === 'ko' ? '복사' : 'Copy', keys: ['Ctrl', 'C'] },
-                { action: currentLang === 'ko' ? '붙여넣기' : 'Paste', keys: ['Ctrl', 'V'] },
-                { action: currentLang === 'ko' ? '잘라내기' : 'Cut', keys: ['Ctrl', 'X'] },
-                { action: currentLang === 'ko' ? '실행 취소' : 'Undo', keys: ['Ctrl', 'Z'] },
-                { action: currentLang === 'ko' ? '다시 실행' : 'Redo', keys: ['Ctrl', 'Y'] },
-                { action: currentLang === 'ko' ? '모두 선택' : 'Select All', keys: ['Ctrl', 'A'] },
-                { action: currentLang === 'ko' ? '찾기' : 'Find', keys: ['Ctrl', 'F'] },
-                { action: currentLang === 'ko' ? '저장' : 'Save', keys: ['Ctrl', 'S'] },
-                { action: currentLang === 'ko' ? '새 파일' : 'New File', keys: ['Ctrl', 'N'] },
-                { action: currentLang === 'ko' ? '창 전환' : 'Switch Window', keys: ['Alt', 'Tab'] }
+                { action: '복사', keys: ['Ctrl', 'C'] },
+                { action: '붙여넣기', keys: ['Ctrl', 'V'] },
+                { action: '잘라내기', keys: ['Ctrl', 'X'] },
+                { action: '실행 취소', keys: ['Ctrl', 'Z'] },
+                { action: '다시 실행', keys: ['Ctrl', 'Y'] },
+                { action: '모두 선택', keys: ['Ctrl', 'A'] },
+                { action: '찾기', keys: ['Ctrl', 'F'] },
+                { action: '저장', keys: ['Ctrl', 'S'] },
+                { action: '새 파일', keys: ['Ctrl', 'N'] },
+                { action: '창 전환', keys: ['Alt', 'Tab'] }
             ],
             'mac': [
-                { action: currentLang === 'ko' ? '복사' : 'Copy', keys: ['⌘', 'C'] },
-                { action: currentLang === 'ko' ? '붙여넣기' : 'Paste', keys: ['⌘', 'V'] },
-                { action: currentLang === 'ko' ? '잘라내기' : 'Cut', keys: ['⌘', 'X'] },
-                { action: currentLang === 'ko' ? '실행 취소' : 'Undo', keys: ['⌘', 'Z'] },
-                { action: currentLang === 'ko' ? '다시 실행' : 'Redo', keys: ['⌘', 'Shift', 'Z'] },
-                { action: currentLang === 'ko' ? '모두 선택' : 'Select All', keys: ['⌘', 'A'] },
-                { action: currentLang === 'ko' ? '찾기' : 'Find', keys: ['⌘', 'F'] },
-                { action: currentLang === 'ko' ? '저장' : 'Save', keys: ['⌘', 'S'] },
-                { action: currentLang === 'ko' ? '새 파일' : 'New File', keys: ['⌘', 'N'] },
-                { action: currentLang === 'ko' ? '앱 전환' : 'Switch App', keys: ['⌘', 'Tab'] }
+                { action: '복사', keys: ['⌘', 'C'] },
+                { action: '붙여넣기', keys: ['⌘', 'V'] },
+                { action: '잘라내기', keys: ['⌘', 'X'] },
+                { action: '실행 취소', keys: ['⌘', 'Z'] },
+                { action: '다시 실행', keys: ['⌘', 'Shift', 'Z'] },
+                { action: '모두 선택', keys: ['⌘', 'A'] },
+                { action: '찾기', keys: ['⌘', 'F'] },
+                { action: '저장', keys: ['⌘', 'S'] },
+                { action: '새 파일', keys: ['⌘', 'N'] },
+                { action: '앱 전환', keys: ['⌘', 'Tab'] }
             ],
             'vscode': [
-                { action: currentLang === 'ko' ? '명령 팔레트' : 'Command Palette', keys: ['Ctrl/⌘', 'Shift', 'P'] },
-                { action: currentLang === 'ko' ? '파일 열기' : 'Open File', keys: ['Ctrl/⌘', 'O'] },
-                { action: currentLang === 'ko' ? '터미널 토글' : 'Toggle Terminal', keys: ['Ctrl/⌘', '`'] },
-                { action: currentLang === 'ko' ? '주석 토글' : 'Toggle Comment', keys: ['Ctrl/⌘', '/'] },
-                { action: currentLang === 'ko' ? '다중 커서' : 'Multi Cursor', keys: ['Alt/⌥', 'Click'] },
-                { action: currentLang === 'ko' ? '줄 복사' : 'Copy Line', keys: ['Alt/⌥', 'Shift', '↓'] },
-                { action: currentLang === 'ko' ? '줄 이동' : 'Move Line', keys: ['Alt/⌥', '↓'] },
-                { action: currentLang === 'ko' ? '파일 검색' : 'File Search', keys: ['Ctrl/⌘', 'P'] }
+                { action: '명령 팔레트', keys: ['Ctrl/⌘', 'Shift', 'P'] },
+                { action: '파일 열기', keys: ['Ctrl/⌘', 'O'] },
+                { action: '터미널 토글', keys: ['Ctrl/⌘', '`'] },
+                { action: '주석 토글', keys: ['Ctrl/⌘', '/'] },
+                { action: '다중 커서', keys: ['Alt/⌥', 'Click'] },
+                { action: '줄 복사', keys: ['Alt/⌥', 'Shift', '↓'] },
+                { action: '줄 이동', keys: ['Alt/⌥', '↓'] },
+                { action: '파일 검색', keys: ['Ctrl/⌘', 'P'] }
             ],
             'excel': [
-                { action: currentLang === 'ko' ? '셀 편집' : 'Edit Cell', keys: ['F2'] },
-                { action: currentLang === 'ko' ? '절대참조 전환' : 'Toggle Absolute', keys: ['F4'] },
-                { action: currentLang === 'ko' ? '시트 이동' : 'Switch Sheet', keys: ['Ctrl', 'Page Up/Down'] },
-                { action: currentLang === 'ko' ? '열 전체 선택' : 'Select Column', keys: ['Ctrl', 'Space'] },
-                { action: currentLang === 'ko' ? '행 전체 선택' : 'Select Row', keys: ['Shift', 'Space'] },
-                { action: currentLang === 'ko' ? '서식 복사' : 'Copy Format', keys: ['Ctrl', 'Shift', 'C'] },
-                { action: currentLang === 'ko' ? '값만 붙여넣기' : 'Paste Values', keys: ['Ctrl', 'Alt', 'V'] },
-                { action: currentLang === 'ko' ? '필터 적용' : 'Apply Filter', keys: ['Ctrl', 'Shift', 'L'] }
+                { action: '셀 편집', keys: ['F2'] },
+                { action: '절대참조 전환', keys: ['F4'] },
+                { action: '시트 이동', keys: ['Ctrl', 'Page Up/Down'] },
+                { action: '열 전체 선택', keys: ['Ctrl', 'Space'] },
+                { action: '행 전체 선택', keys: ['Shift', 'Space'] },
+                { action: '서식 복사', keys: ['Ctrl', 'Shift', 'C'] },
+                { action: '값만 붙여넣기', keys: ['Ctrl', 'Alt', 'V'] },
+                { action: '필터 적용', keys: ['Ctrl', 'Shift', 'L'] }
             ]
         };
 
-        // 단축키 표시
+        // Windows 10 단축키 로드
+        function selectWin10Shortcuts() {
+            hideAllSections();
+            document.getElementById('shortcutSection').style.display = 'block';
+            
+            // 드롭다운 닫기
+            document.getElementById('shortcutDropdown').classList.remove('show');
+            document.getElementById('shortcutButton').classList.remove('open');
+            
+            // 제목 업데이트
+            document.getElementById('shortcutTitle').textContent = '🪟 Windows 10 단축키';
+            
+            // 로딩 표시
+            const table = document.getElementById('shortcutTable');
+            table.innerHTML = '<div class="loading">단축키 데이터를 불러오는 중...</div>';
+            
+            // 스프레드시트에서 데이터 로드
+            const url = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTc7jzLftQBL-UUnwIHYR4yXHLp-fX3OKB0cE8l9tWKjCAr_Y_IpzO6P_aAbp6MZ_s2Qt26PC_71CVX/pub?gid=1189009821&single=true&output=csv';
+            
+            fetch(url)
+            .then(response => response.text())
+            .then(csvText => {
+                const lines = csvText.split('\n');
+                const shortcuts = [];
+                
+                // 헤더 스킵하고 데이터 파싱 (A열: Shortcut, C열: Description)
+                for (let i = 1; i < lines.length; i++) {
+                    const line = lines[i].trim();
+                    if (!line) continue;
+                    
+                    // CSV 파싱
+                    const fields = parseCSVLine(line);
+                    
+                    if (fields.length >= 3) {
+                        const shortcut = fields[0] ? fields[0].trim() : '';
+                        const description = fields[2] ? fields[2].trim() : '';
+                        
+                        if (shortcut && description) {
+                            shortcuts.push({
+                                shortcut: shortcut,
+                                description: description
+                            });
+                        }
+                    }
+                }
+                
+                // 테이블 생성
+                table.innerHTML = `
+                    <thead>
+                        <tr>
+                            <th>단축키</th>
+                            <th>설명</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${shortcuts.map(item => `
+                            <tr>
+                                <td><span class="shortcut-key">${item.shortcut}</span></td>
+                                <td>${item.description}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                `;
+                
+                console.log('Windows 10 단축키 ' + shortcuts.length + '개 로드 완료');
+            })
+            .catch(error => {
+                console.error('Windows 10 단축키 로드 오류:', error);
+                table.innerHTML = '<div class="loading">데이터 로드 실패: ' + error.message + '</div>';
+            });
+        }
+
+        // 단축키 표시 (기존)
         function selectShortcut(platform) {
             hideAllSections();
             document.getElementById('shortcutSection').style.display = 'block';
@@ -1532,10 +1502,10 @@
             
             // 제목 업데이트
             const titles = {
-                'windows': '🪟 Windows ' + (currentLang === 'ko' ? '단축키' : 'Shortcuts'),
-                'mac': '🍎 Mac ' + (currentLang === 'ko' ? '단축키' : 'Shortcuts'),
-                'vscode': '📝 VS Code ' + (currentLang === 'ko' ? '단축키' : 'Shortcuts'),
-                'excel': '📊 Excel ' + (currentLang === 'ko' ? '단축키' : 'Shortcuts')
+                'windows': '🪟 Windows 단축키',
+                'mac': '🍎 Mac 단축키',
+                'vscode': '📝 VS Code 단축키',
+                'excel': '📊 Excel 단축키'
             };
             document.getElementById('shortcutTitle').textContent = titles[platform];
             
@@ -1544,8 +1514,8 @@
             table.innerHTML = `
                 <thead>
                     <tr>
-                        <th>${t('function')}</th>
-                        <th>${t('shortcutKeys')}</th>
+                        <th>기능</th>
+                        <th>단축키</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -1581,7 +1551,6 @@
         // 초기화
         window.onload = () => {
             loadEmojis();
-            updateUILanguage();
         };
     </script>
 </body>
