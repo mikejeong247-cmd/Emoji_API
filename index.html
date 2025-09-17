@@ -574,8 +574,10 @@
                 rows.forEach(row => {
                     if (row.c && row.c.length >= 3) {
                         const category = row.c[0] ? (row.c[0].v || '') : '';
-                        const symbol = row.c[1] ? (row.c[1].v || '') : '';
-                        const nameKo = row.c[2] ? (row.c[2].v || '') : '';
+                        // C열(index 2)에서 실제 문자 가져오기 (B열이 아닌)
+                        const symbol = row.c[2] ? (row.c[2].v || '') : '';
+                        // 한글 이름은 E열이나 다른 열에 있을 수 있음
+                        const nameKo = row.c[4] ? (row.c[4].v || '') : '';
                         
                         if (symbol && category) {
                             allSymbols.push({
