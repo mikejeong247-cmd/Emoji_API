@@ -845,7 +845,7 @@
             return result.map(field => field.trim());
         }
 
-        // 이모지 데이터 로드
+        // 이모지 데이터 로드 (수정됨)
         function loadEmojis() {
             console.log('이모지 데이터 로드 시작');
             
@@ -866,14 +866,19 @@
                     const line = lines[i].trim();
                     if (!line) continue;
                     
-                    const cleanLine = line.replace(/"/g, '');
-                    const fields = cleanLine.split(',');
+                    // parseCSVLine 함수 사용
+                    const fields = parseCSVLine(line);
                     
-                    if (fields.length < 5) continue;
+                    if (fields.length < 6) continue;
                     
                     const category = fields[1] ? fields[1].trim() : '';
                     let emoji = fields[3] ? fields[3].trim() : '';
                     const nameKo = fields[5] ? fields[5].trim() : '';
+                    
+                    // 따옴표 제거
+                    if (emoji.startsWith('"') && emoji.endsWith('"')) {
+                        emoji = emoji.slice(1, -1);
+                    }
                     
                     if (emoji && emoji.includes('U+')) {
                         emoji = unicodeToEmoji(emoji);
@@ -898,7 +903,8 @@
             })
             .catch(error => {
                 console.error('이모지 로드 오류:', error);
-                document.getElementById('emojiGrid').innerHTML = '<div class="loading">데이터 로드 실패: ' + error.message + '</div>';
+                document.getElementById('emojiGrid').innerHTML = 
+                    '<div class="loading">데이터 로드 실패. 콘솔을 확인하세요.<br>' + error.message + '</div>';
             });
         }
 
@@ -937,12 +943,18 @@
                 console.log('총 ' + allSymbols.length + '개 특수기호 로드 완료');
                 
                 createDropdownMenus();
-                selectCategory('Smileys & Emotion', 'emoji');
+                // 첫 카테고리 자동 선택
+                if (allEmojis.length > 0) {
+                    selectCategory('Smileys & Emotion', 'emoji');
+                }
             })
             .catch(error => {
                 console.error('특수기호 로드 오류:', error);
                 createDropdownMenus();
-                selectCategory('Smileys & Emotion', 'emoji');
+                // 이모지만 있어도 첫 카테고리 선택
+                if (allEmojis.length > 0) {
+                    selectCategory('Smileys & Emotion', 'emoji');
+                }
             });
         }
 
@@ -1003,16 +1015,24 @@
             });
         }
 
-        // 드롭다운 토글
+        // 드롭다운 토글 (수정됨)
         function toggleDropdown(type) {
             const dropdown = document.getElementById(type + 'Dropdown');
             const button = document.getElementById(type + 'Button');
             
+            // null 체크 추가
+            if (!dropdown || !button) {
+                console.warn('드롭다운 요소를 찾을 수 없음:', type);
+                return;
+            }
+            
             // 모든 드롭다운 닫기
             ['emoji', 'symbol', 'shortcut'].forEach(t => {
                 if (t !== type) {
-                    document.getElementById(t + 'Dropdown').classList.remove('show');
-                    document.getElementById(t + 'Button').classList.remove('open');
+                    const otherDropdown = document.getElementById(t + 'Dropdown');
+                    const otherButton = document.getElementById(t + 'Button');
+                    if (otherDropdown) otherDropdown.classList.remove('show');
+                    if (otherButton) otherButton.classList.remove('open');
                 }
             });
             
@@ -1020,15 +1040,27 @@
             button.classList.toggle('open');
         }
 
-        // 카테고리 선택
+        // 카테고리 선택 (수정됨)
         function selectCategory(category, type) {
+            // 데이터가 아직 로드되지 않았으면 대기
+            if (type === 'emoji' && allEmojis.length === 0) {
+                console.log('이모지 데이터 아직 로드되지 않음');
+                return;
+            }
+            if (type === 'symbol' && allSymbols.length === 0) {
+                console.log('특수기호 데이터 아직 로드되지 않음');
+                return;
+            }
+            
             currentCategory = category;
             currentType = type;
             
             // 모든 드롭다운 닫기
             ['emoji', 'symbol', 'shortcut'].forEach(t => {
-                document.getElementById(t + 'Dropdown').classList.remove('show');
-                document.getElementById(t + 'Button').classList.remove('open');
+                const dropdown = document.getElementById(t + 'Dropdown');
+                const button = document.getElementById(t + 'Button');
+                if (dropdown) dropdown.classList.remove('show');
+                if (button) button.classList.remove('open');
             });
             
             // 모든 도구 섹션 숨기기
@@ -1060,6 +1092,7 @@
                     }));
             }
             
+            console.log(`카테고리 ${category} 선택됨, ${filteredItems.length}개 항목`);
             displayItems(true);
         }
 
@@ -1073,6 +1106,7 @@
             }
             
             if (filteredItems.length === 0) {
+                grid.innerHTML = '<div class="loading">해당 카테고리에 항목이 없습니다</div>';
                 return;
             }
             
@@ -1308,8 +1342,10 @@
             document.getElementById('shortcutSection').style.display = 'block';
             
             // 드롭다운 닫기
-            document.getElementById('shortcutDropdown').classList.remove('show');
-            document.getElementById('shortcutButton').classList.remove('open');
+            const shortcutDropdown = document.getElementById('shortcutDropdown');
+            const shortcutButton = document.getElementById('shortcutButton');
+            if (shortcutDropdown) shortcutDropdown.classList.remove('show');
+            if (shortcutButton) shortcutButton.classList.remove('open');
             
             // 제목 업데이트
             const titles = {
@@ -1353,8 +1389,10 @@
         document.addEventListener('click', (event) => {
             if (!event.target.closest('.dropdown-wrapper') && !event.target.closest('.category-button')) {
                 ['emoji', 'symbol', 'shortcut'].forEach(type => {
-                    document.getElementById(type + 'Dropdown').classList.remove('show');
-                    document.getElementById(type + 'Button').classList.remove('open');
+                    const dropdown = document.getElementById(type + 'Dropdown');
+                    const button = document.getElementById(type + 'Button');
+                    if (dropdown) dropdown.classList.remove('show');
+                    if (button) button.classList.remove('open');
                 });
             }
         });
