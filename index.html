@@ -412,31 +412,23 @@
             'Component': { icon: '🔲', nameKo: '구성요소' }
         };
 
-        // 영어 카테고리를 한글로 변환
-        const categoryTranslations = {
-            'Arrows': '화살표',
-            'Block Elements': '블록요소',
-            'Box Drawing': '박스그리기',
-            'Braille Patterns': '점자패턴',
-            'Currency Symbols': '통화기호',
-            'Dingbats': '장식기호',
-            'General Punctuation': '일반문장부호',
-            'Geometric Shapes': '기하도형',
-            'Latin-1 Supplement': '라틴보충문자',
-            'Letterlike Symbols': '문자형기호',
-            'Mathematical Operators': '수학연산자',
-            'Miscellaneous Symbols': '기타기호',
-            'Miscellaneous Technical': '기술기호',
-            'Number Forms': '숫자형태'
+        // 특수기호 카테고리별 한글명과 대표 아이콘
+        const symbolCategoryInfo = {
+            'Arrows': { icon: '→', nameKo: '화살표' },
+            'Block Elements': { icon: '▀', nameKo: '블록요소' },
+            'Box Drawing': { icon: '┌', nameKo: '박스그리기' },
+            'Braille Patterns': { icon: '⠀', nameKo: '점자패턴' },
+            'Currency Symbols': { icon: '$', nameKo: '통화기호' },
+            'Dingbats': { icon: '✿', nameKo: '장식기호' },
+            'General Punctuation': { icon: '•', nameKo: '일반문장부호' },
+            'Geometric Shapes': { icon: '●', nameKo: '기하도형' },
+            'Latin-1 Supplement': { icon: '§', nameKo: '라틴보충문자' },
+            'Letterlike Symbols': { icon: '℃', nameKo: '문자형기호' },
+            'Mathematical Operators': { icon: '∑', nameKo: '수학연산자' },
+            'Miscellaneous Symbols': { icon: '☺', nameKo: '기타기호' },
+            'Miscellaneous Technical': { icon: '⌘', nameKo: '기술기호' },
+            'Number Forms': { icon: '½', nameKo: '숫자형태' }
         };
-
-        // 특수기호 카테고리별 대표 아이콘
-        const symbolCategoryIcons = {
-            '화살표': '→',
-            '블록요소': '▀',
-            '박스그리기': '┌',
-            '점자패턴': '⠀',
-            '통화기호': '
 
         // 유니코드 변환
         function unicodeToEmoji(unicodeStr) {
@@ -476,7 +468,7 @@
             return String.fromCodePoint(...codePoints);
         }
 
-        // CSV 파싱 개선 함수
+        // CSV 파싱 함수
         function parseCSVLine(line) {
             const result = [];
             let current = '';
@@ -562,24 +554,21 @@
             });
         }
 
-        // 특수기호 데이터 로드 (개선된 버전)
+        // 특수기호 데이터 로드 - JSON 형식 사용
         function loadSymbols() {
             console.log('특수기호 데이터 로드 시작');
             
-            // JSON 형식으로 export URL 변경
             const url = 'https://docs.google.com/spreadsheets/d/1FIdy5qPmAoDBBpQDqVdwk-Rhnj3rukoZXyYJ-BdnUtw/gviz/tq?tqx=out:json&sheet=Sign&headers=1';
             
             fetch(url)
             .then(response => response.text())
             .then(text => {
                 // Google Sheets JSON 응답 파싱
-                // 응답은 google.visualization.Query.setResponse(...) 형태
                 const jsonString = text.substring(47, text.length - 2);
                 const data = JSON.parse(jsonString);
                 
                 allSymbols = [];
                 
-                // 헤더 행 제외하고 데이터 행 처리
                 const rows = data.table.rows;
                 
                 rows.forEach(row => {
@@ -589,13 +578,8 @@
                         const nameKo = row.c[2] ? (row.c[2].v || '') : '';
                         
                         if (symbol && category) {
-                            // 유니코드 이스케이프 처리
-                            const decodedSymbol = symbol.replace(/\\u[\dA-F]{4}/gi, 
-                                match => String.fromCharCode(parseInt(match.replace(/\\u/g, ''), 16))
-                            );
-                            
                             allSymbols.push({
-                                symbol: decodedSymbol,
+                                symbol: symbol,
                                 name_ko: nameKo || '특수기호',
                                 category: category
                             });
@@ -613,77 +597,10 @@
             })
             .catch(error => {
                 console.error('특수기호 로드 오류:', error);
-                
-                // 로드 실패 시 백업 데이터 사용
-                console.log('백업 특수기호 데이터 사용');
-                allSymbols = getBackupSymbols();
-                
+                // 특수기호 로드 실패해도 이모지는 동작하도록
                 createDropdownMenus();
                 selectCategory('Smileys & Emotion', 'emoji');
             });
-        }
-
-        // 백업 특수기호 데이터
-        function getBackupSymbols() {
-            return [
-                // Arrows
-                {symbol: '←', name_ko: '왼쪽 화살표', category: 'Arrows'},
-                {symbol: '↑', name_ko: '위 화살표', category: 'Arrows'},
-                {symbol: '→', name_ko: '오른쪽 화살표', category: 'Arrows'},
-                {symbol: '↓', name_ko: '아래 화살표', category: 'Arrows'},
-                {symbol: '↔', name_ko: '양방향 화살표', category: 'Arrows'},
-                {symbol: '↕', name_ko: '위아래 화살표', category: 'Arrows'},
-                {symbol: '⇐', name_ko: '왼쪽 이중화살표', category: 'Arrows'},
-                {symbol: '⇒', name_ko: '오른쪽 이중화살표', category: 'Arrows'},
-                {symbol: '⇔', name_ko: '양방향 이중화살표', category: 'Arrows'},
-                
-                // Currency Symbols
-                {symbol: '$', name_ko: '달러', category: 'Currency Symbols'},
-                {symbol: '€', name_ko: '유로', category: 'Currency Symbols'},
-                {symbol: '£', name_ko: '파운드', category: 'Currency Symbols'},
-                {symbol: '¥', name_ko: '엔/위안', category: 'Currency Symbols'},
-                {symbol: '₩', name_ko: '원', category: 'Currency Symbols'},
-                
-                // Mathematical Operators
-                {symbol: '+', name_ko: '더하기', category: 'Mathematical Operators'},
-                {symbol: '−', name_ko: '빼기', category: 'Mathematical Operators'},
-                {symbol: '×', name_ko: '곱하기', category: 'Mathematical Operators'},
-                {symbol: '÷', name_ko: '나누기', category: 'Mathematical Operators'},
-                {symbol: '=', name_ko: '같음', category: 'Mathematical Operators'},
-                {symbol: '≠', name_ko: '같지 않음', category: 'Mathematical Operators'},
-                {symbol: '≤', name_ko: '작거나 같음', category: 'Mathematical Operators'},
-                {symbol: '≥', name_ko: '크거나 같음', category: 'Mathematical Operators'},
-                {symbol: '∞', name_ko: '무한', category: 'Mathematical Operators'},
-                {symbol: '∑', name_ko: '합계', category: 'Mathematical Operators'},
-                {symbol: '√', name_ko: '제곱근', category: 'Mathematical Operators'},
-                {symbol: '∫', name_ko: '적분', category: 'Mathematical Operators'},
-                
-                // General Punctuation
-                {symbol: '•', name_ko: '불릿', category: 'General Punctuation'},
-                {symbol: '…', name_ko: '말줄임표', category: 'General Punctuation'},
-                {symbol: '‼', name_ko: '이중 느낌표', category: 'General Punctuation'},
-                {symbol: '⁇', name_ko: '이중 물음표', category: 'General Punctuation'},
-                
-                // Geometric Shapes
-                {symbol: '●', name_ko: '검은 원', category: 'Geometric Shapes'},
-                {symbol: '○', name_ko: '빈 원', category: 'Geometric Shapes'},
-                {symbol: '■', name_ko: '검은 사각형', category: 'Geometric Shapes'},
-                {symbol: '□', name_ko: '빈 사각형', category: 'Geometric Shapes'},
-                {symbol: '▲', name_ko: '검은 삼각형', category: 'Geometric Shapes'},
-                {symbol: '△', name_ko: '빈 삼각형', category: 'Geometric Shapes'},
-                {symbol: '◆', name_ko: '검은 다이아몬드', category: 'Geometric Shapes'},
-                {symbol: '◇', name_ko: '빈 다이아몬드', category: 'Geometric Shapes'},
-                
-                // Miscellaneous Symbols
-                {symbol: '☆', name_ko: '빈 별', category: 'Miscellaneous Symbols'},
-                {symbol: '★', name_ko: '검은 별', category: 'Miscellaneous Symbols'},
-                {symbol: '♠', name_ko: '스페이드', category: 'Miscellaneous Symbols'},
-                {symbol: '♣', name_ko: '클로버', category: 'Miscellaneous Symbols'},
-                {symbol: '♥', name_ko: '하트', category: 'Miscellaneous Symbols'},
-                {symbol: '♦', name_ko: '다이아몬드', category: 'Miscellaneous Symbols'},
-                {symbol: '♪', name_ko: '음표', category: 'Miscellaneous Symbols'},
-                {symbol: '♫', name_ko: '음표', category: 'Miscellaneous Symbols'}
-            ];
         }
 
         // 유니크한 카테고리 추출
@@ -723,511 +640,22 @@
                 const div = document.createElement('div');
                 div.className = 'dropdown-item';
                 
-                // 카테고리의 첫 번째 기호를 아이콘으로 사용
-                const categorySymbols = allSymbols.filter(s => s.category === category);
-                const icon = symbolCategoryIcons[category] || (categorySymbols[0] ? categorySymbols[0].symbol : '◆');
-                
-                div.innerHTML = `
-                    <span class="category-icon">${icon}</span>
-                    <span>${category}</span>
-                `;
-                
-                div.onclick = () => selectCategory(category, 'symbol');
-                symbolDropdown.appendChild(div);
-            });
-        }
-
-        // 드롭다운 토글
-        function toggleDropdown(type) {
-            const dropdown = document.getElementById(type + 'Dropdown');
-            const button = document.getElementById(type + 'Button');
-            const otherType = type === 'emoji' ? 'symbol' : 'emoji';
-            const otherDropdown = document.getElementById(otherType + 'Dropdown');
-            const otherButton = document.getElementById(otherType + 'Button');
-            
-            // 다른 드롭다운 닫기
-            otherDropdown.classList.remove('show');
-            otherButton.classList.remove('open');
-            
-            // 현재 드롭다운 토글
-            dropdown.classList.toggle('show');
-            button.classList.toggle('open');
-        }
-
-        // 카테고리 선택
-        function selectCategory(category, type) {
-            currentCategory = category;
-            currentType = type;
-            
-            // 모든 드롭다운 닫기
-            document.getElementById('emojiDropdown').classList.remove('show');
-            document.getElementById('symbolDropdown').classList.remove('show');
-            document.getElementById('emojiButton').classList.remove('open');
-            document.getElementById('symbolButton').classList.remove('open');
-            
-            // 활성 버튼 표시
-            if (type === 'emoji') {
-                document.getElementById('emojiButton').classList.add('active');
-                document.getElementById('symbolButton').classList.remove('active');
-                
-                filteredItems = allEmojis
-                    .filter(item => item.category === category)
-                    .map(item => ({
-                        text: item.emoji,
-                        name_ko: item.name_ko,
-                        category: item.category
-                    }));
-            } else {
-                document.getElementById('symbolButton').classList.add('active');
-                document.getElementById('emojiButton').classList.remove('active');
-                
-                filteredItems = allSymbols
-                    .filter(item => item.category === category)
-                    .map(item => ({
-                        text: item.symbol,
-                        name_ko: item.name_ko,
-                        category: item.category
-                    }));
-            }
-            
-            displayItems(true);
-        }
-
-        // 아이템 표시
-        function displayItems(reset = false) {
-            const grid = document.getElementById('emojiGrid');
-            
-            if (reset) {
-                grid.innerHTML = '';
-                displayedCount = 0;
-            }
-            
-            if (filteredItems.length === 0) {
-                return;
-            }
-            
-            const endIndex = Math.min(displayedCount + ITEMS_PER_PAGE, filteredItems.length);
-            
-            for (let i = displayedCount; i < endIndex; i++) {
-                const item = filteredItems[i];
-                const div = document.createElement('div');
-                div.className = 'emoji-item';
-                div.title = item.name_ko;
-                div.onclick = () => copyItem(item.text, item.name_ko);
-                
-                const span = document.createElement('span');
-                span.className = 'emoji';
-                span.textContent = item.text;
-                
-                div.appendChild(span);
-                grid.appendChild(div);
-            }
-            
-            displayedCount = endIndex;
-            updateLoadMoreButton();
-        }
-
-        // 더보기 버튼 업데이트
-        function updateLoadMoreButton() {
-            const container = document.getElementById('loadMoreContainer');
-            const remainingSpan = document.getElementById('remainingCount');
-            
-            const remaining = filteredItems.length - displayedCount;
-            
-            if (remaining > 0) {
-                container.style.display = 'block';
-                remainingSpan.textContent = remaining;
-            } else {
-                container.style.display = 'none';
-            }
-        }
-
-        // 더보기
-        function loadMoreItems() {
-            displayItems(false);
-        }
-
-        // 복사
-        function copyItem(item, name) {
-            clipboardItems.push(item);
-            updateClipboard();
-            
-            if (navigator.clipboard && navigator.clipboard.writeText) {
-                navigator.clipboard.writeText(item).then(() => {
-                    showToast(item + ' 복사됨!');
-                }).catch(() => {
-                    fallbackCopy(item);
-                });
-            } else {
-                fallbackCopy(item);
-            }
-        }
-
-        function fallbackCopy(text) {
-            const textarea = document.createElement('textarea');
-            textarea.value = text;
-            textarea.style.position = 'fixed';
-            textarea.style.opacity = '0';
-            document.body.appendChild(textarea);
-            textarea.select();
-            
-            try {
-                document.execCommand('copy');
-                showToast(text + ' 복사됨!');
-            } catch (err) {
-                showToast('복사 실패');
-            }
-            
-            document.body.removeChild(textarea);
-        }
-
-        function updateClipboard() {
-            const clipboard = document.getElementById('clipboard');
-            
-            if (clipboardItems.length === 0) {
-                clipboard.innerHTML = '<span style="color: #999;">복사한 이모지가 여기에 표시됩니다</span>';
-            } else {
-                clipboard.textContent = clipboardItems.join(' ');
-            }
-        }
-
-        function clearClipboard() {
-            clipboardItems = [];
-            updateClipboard();
-            showToast('클립보드 초기화');
-        }
-
-        function showToast(message) {
-            const toast = document.getElementById('toast');
-            toast.textContent = message;
-            toast.classList.add('show');
-            
-            setTimeout(() => {
-                toast.classList.remove('show');
-            }, 1500);
-        }
-
-        // 외부 클릭시 드롭다운 닫기
-        document.addEventListener('click', (event) => {
-            if (!event.target.closest('.dropdown-wrapper')) {
-                document.getElementById('emojiDropdown').classList.remove('show');
-                document.getElementById('symbolDropdown').classList.remove('show');
-                document.getElementById('emojiButton').classList.remove('open');
-                document.getElementById('symbolButton').classList.remove('open');
-            }
-        });
-
-        // 초기화
-        window.onload = () => {
-            loadEmojis();
-        };
-    </script>
-</body>
-</html>,
-            '장식기호': '✿',
-            '일반문장부호': '•',
-            '기하도형': '●',
-            '라틴보충문자': '§',
-            '문자형기호': '℃',
-            '수학연산자': '∑',
-            '기타기호': '☺',
-            '기술기호': '⌘',
-            '숫자형태': '½'
-        };
-
-        // 유니코드 변환
-        function unicodeToEmoji(unicodeStr) {
-            if (!unicodeStr || !unicodeStr.includes('U+')) {
-                return unicodeStr;
-            }
-            
-            try {
-                const codePoints = unicodeStr
-                    .split(' ')
-                    .map(code => code.replace('U+', ''))
-                    .filter(code => code.length > 0)
-                    .map(code => parseInt(code, 16));
-                    
-                if (codePoints.length === 0) {
-                    return unicodeStr;
-                }
-                
-                return String.fromCodePoint(...codePoints);
-            } catch (error) {
-                console.warn('유니코드 변환 실패:', unicodeStr, error);
-                return unicodeStr;
-            }
-        }
-
-        // 국가 코드를 국기로 변환
-        function countryCodeToFlag(countryCode) {
-            if (!countryCode || countryCode.length !== 2) {
-                return '🏳️';
-            }
-            
-            const codePoints = countryCode
-                .toUpperCase()
-                .split('')
-                .map(char => 127397 + char.charCodeAt(0));
-            
-            return String.fromCodePoint(...codePoints);
-        }
-
-        // CSV 파싱 개선 함수
-        function parseCSVLine(line) {
-            const result = [];
-            let current = '';
-            let inQuotes = false;
-            
-            for (let i = 0; i < line.length; i++) {
-                const char = line[i];
-                const nextChar = line[i + 1];
-                
-                if (char === '"') {
-                    if (inQuotes && nextChar === '"') {
-                        current += '"';
-                        i++;
-                    } else {
-                        inQuotes = !inQuotes;
-                    }
-                } else if (char === ',' && !inQuotes) {
-                    result.push(current);
-                    current = '';
+                // 카테고리 정보 가져오기 (한글명과 아이콘)
+                const info = symbolCategoryInfo[category];
+                if (info) {
+                    div.innerHTML = `
+                        <span class="category-icon">${info.icon}</span>
+                        <span>${info.nameKo}</span>
+                    `;
                 } else {
-                    current += char;
+                    // 정의되지 않은 카테고리는 첫 번째 기호를 아이콘으로 사용
+                    const categorySymbols = allSymbols.filter(s => s.category === category);
+                    const icon = categorySymbols[0] ? categorySymbols[0].symbol : '◆';
+                    div.innerHTML = `
+                        <span class="category-icon">${icon}</span>
+                        <span>${category}</span>
+                    `;
                 }
-            }
-            
-            result.push(current);
-            return result.map(field => field.trim());
-        }
-
-        // 이모지 데이터 로드
-        function loadEmojis() {
-            console.log('이모지 데이터 로드 시작');
-            
-            fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vTc7jzLftQBL-UUnwIHYR4yXHLp-fX3OKB0cE8l9tWKjCAr_Y_IpzO6P_aAbp6MZ_s2Qt26PC_71CVX/pub?gid=840637915&single=true&output=csv')
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('네트워크 응답이 좋지 않습니다');
-                }
-                return response.text();
-            })
-            .then(csvText => {
-                console.log('CSV 데이터 로드 완료');
-                
-                const lines = csvText.split('\n');
-                allEmojis = [];
-                
-                for (let i = 1; i < lines.length; i++) {
-                    const line = lines[i].trim();
-                    if (!line) continue;
-                    
-                    const cleanLine = line.replace(/"/g, '');
-                    const fields = cleanLine.split(',');
-                    
-                    if (fields.length < 5) continue;
-                    
-                    const category = fields[1] ? fields[1].trim() : '';
-                    let emoji = fields[3] ? fields[3].trim() : '';
-                    const nameKo = fields[5] ? fields[5].trim() : '';
-                    
-                    if (emoji && emoji.includes('U+')) {
-                        emoji = unicodeToEmoji(emoji);
-                    } else if (emoji && emoji.length === 2 && /^[A-Z]{2}$/.test(emoji) && 
-                             (category === '깃발' || category === 'Flags')) {
-                        emoji = countryCodeToFlag(emoji);
-                    }
-                    
-                    if (emoji && category) {
-                        allEmojis.push({
-                            emoji: emoji,
-                            name_ko: nameKo || '이모지',
-                            category: category
-                        });
-                    }
-                }
-                
-                console.log('총 ' + allEmojis.length + '개 이모지 로드 완료');
-                
-                // 특수기호 데이터도 로드
-                loadSymbols();
-            })
-            .catch(error => {
-                console.error('이모지 로드 오류:', error);
-                document.getElementById('emojiGrid').innerHTML = '<div class="loading">데이터 로드 실패: ' + error.message + '</div>';
-            });
-        }
-
-        // 특수기호 데이터 로드 (개선된 버전)
-        function loadSymbols() {
-            console.log('특수기호 데이터 로드 시작');
-            
-            // JSON 형식으로 export URL 변경
-            const url = 'https://docs.google.com/spreadsheets/d/1FIdy5qPmAoDBBpQDqVdwk-Rhnj3rukoZXyYJ-BdnUtw/gviz/tq?tqx=out:json&sheet=Sign&headers=1';
-            
-            fetch(url)
-            .then(response => response.text())
-            .then(text => {
-                // Google Sheets JSON 응답 파싱
-                // 응답은 google.visualization.Query.setResponse(...) 형태
-                const jsonString = text.substring(47, text.length - 2);
-                const data = JSON.parse(jsonString);
-                
-                allSymbols = [];
-                
-                // 헤더 행 제외하고 데이터 행 처리
-                const rows = data.table.rows;
-                
-                rows.forEach(row => {
-                    if (row.c && row.c.length >= 3) {
-                        const category = row.c[0] ? (row.c[0].v || '') : '';
-                        const symbol = row.c[1] ? (row.c[1].v || '') : '';
-                        const nameKo = row.c[2] ? (row.c[2].v || '') : '';
-                        
-                        if (symbol && category) {
-                            // 유니코드 이스케이프 처리
-                            const decodedSymbol = symbol.replace(/\\u[\dA-F]{4}/gi, 
-                                match => String.fromCharCode(parseInt(match.replace(/\\u/g, ''), 16))
-                            );
-                            
-                            allSymbols.push({
-                                symbol: decodedSymbol,
-                                name_ko: nameKo || '특수기호',
-                                category: category
-                            });
-                        }
-                    }
-                });
-                
-                console.log('총 ' + allSymbols.length + '개 특수기호 로드 완료');
-                
-                // 드롭다운 메뉴 생성
-                createDropdownMenus();
-                
-                // 첫 번째 카테고리(Smileys & Emotion) 자동 선택
-                selectCategory('Smileys & Emotion', 'emoji');
-            })
-            .catch(error => {
-                console.error('특수기호 로드 오류:', error);
-                
-                // 로드 실패 시 백업 데이터 사용
-                console.log('백업 특수기호 데이터 사용');
-                allSymbols = getBackupSymbols();
-                
-                createDropdownMenus();
-                selectCategory('Smileys & Emotion', 'emoji');
-            });
-        }
-
-        // 백업 특수기호 데이터
-        function getBackupSymbols() {
-            return [
-                // Arrows
-                {symbol: '←', name_ko: '왼쪽 화살표', category: 'Arrows'},
-                {symbol: '↑', name_ko: '위 화살표', category: 'Arrows'},
-                {symbol: '→', name_ko: '오른쪽 화살표', category: 'Arrows'},
-                {symbol: '↓', name_ko: '아래 화살표', category: 'Arrows'},
-                {symbol: '↔', name_ko: '양방향 화살표', category: 'Arrows'},
-                {symbol: '↕', name_ko: '위아래 화살표', category: 'Arrows'},
-                {symbol: '⇐', name_ko: '왼쪽 이중화살표', category: 'Arrows'},
-                {symbol: '⇒', name_ko: '오른쪽 이중화살표', category: 'Arrows'},
-                {symbol: '⇔', name_ko: '양방향 이중화살표', category: 'Arrows'},
-                
-                // Currency Symbols
-                {symbol: '$', name_ko: '달러', category: 'Currency Symbols'},
-                {symbol: '€', name_ko: '유로', category: 'Currency Symbols'},
-                {symbol: '£', name_ko: '파운드', category: 'Currency Symbols'},
-                {symbol: '¥', name_ko: '엔/위안', category: 'Currency Symbols'},
-                {symbol: '₩', name_ko: '원', category: 'Currency Symbols'},
-                
-                // Mathematical Operators
-                {symbol: '+', name_ko: '더하기', category: 'Mathematical Operators'},
-                {symbol: '−', name_ko: '빼기', category: 'Mathematical Operators'},
-                {symbol: '×', name_ko: '곱하기', category: 'Mathematical Operators'},
-                {symbol: '÷', name_ko: '나누기', category: 'Mathematical Operators'},
-                {symbol: '=', name_ko: '같음', category: 'Mathematical Operators'},
-                {symbol: '≠', name_ko: '같지 않음', category: 'Mathematical Operators'},
-                {symbol: '≤', name_ko: '작거나 같음', category: 'Mathematical Operators'},
-                {symbol: '≥', name_ko: '크거나 같음', category: 'Mathematical Operators'},
-                {symbol: '∞', name_ko: '무한', category: 'Mathematical Operators'},
-                {symbol: '∑', name_ko: '합계', category: 'Mathematical Operators'},
-                {symbol: '√', name_ko: '제곱근', category: 'Mathematical Operators'},
-                {symbol: '∫', name_ko: '적분', category: 'Mathematical Operators'},
-                
-                // General Punctuation
-                {symbol: '•', name_ko: '불릿', category: 'General Punctuation'},
-                {symbol: '…', name_ko: '말줄임표', category: 'General Punctuation'},
-                {symbol: '‼', name_ko: '이중 느낌표', category: 'General Punctuation'},
-                {symbol: '⁇', name_ko: '이중 물음표', category: 'General Punctuation'},
-                
-                // Geometric Shapes
-                {symbol: '●', name_ko: '검은 원', category: 'Geometric Shapes'},
-                {symbol: '○', name_ko: '빈 원', category: 'Geometric Shapes'},
-                {symbol: '■', name_ko: '검은 사각형', category: 'Geometric Shapes'},
-                {symbol: '□', name_ko: '빈 사각형', category: 'Geometric Shapes'},
-                {symbol: '▲', name_ko: '검은 삼각형', category: 'Geometric Shapes'},
-                {symbol: '△', name_ko: '빈 삼각형', category: 'Geometric Shapes'},
-                {symbol: '◆', name_ko: '검은 다이아몬드', category: 'Geometric Shapes'},
-                {symbol: '◇', name_ko: '빈 다이아몬드', category: 'Geometric Shapes'},
-                
-                // Miscellaneous Symbols
-                {symbol: '☆', name_ko: '빈 별', category: 'Miscellaneous Symbols'},
-                {symbol: '★', name_ko: '검은 별', category: 'Miscellaneous Symbols'},
-                {symbol: '♠', name_ko: '스페이드', category: 'Miscellaneous Symbols'},
-                {symbol: '♣', name_ko: '클로버', category: 'Miscellaneous Symbols'},
-                {symbol: '♥', name_ko: '하트', category: 'Miscellaneous Symbols'},
-                {symbol: '♦', name_ko: '다이아몬드', category: 'Miscellaneous Symbols'},
-                {symbol: '♪', name_ko: '음표', category: 'Miscellaneous Symbols'},
-                {symbol: '♫', name_ko: '음표', category: 'Miscellaneous Symbols'}
-            ];
-        }
-
-        // 유니크한 카테고리 추출
-        function getUniqueCategories(data) {
-            const categories = [...new Set(data.map(item => item.category))];
-            return categories.sort();
-        }
-
-        // 드롭다운 메뉴 생성
-        function createDropdownMenus() {
-            // 이모지 드롭다운
-            const emojiCategories = getUniqueCategories(allEmojis);
-            const emojiDropdown = document.getElementById('emojiDropdown');
-            emojiDropdown.innerHTML = '';
-            
-            emojiCategories.forEach(category => {
-                const div = document.createElement('div');
-                div.className = 'dropdown-item';
-                
-                const info = categoryInfo[category] || { icon: '📁', nameKo: category };
-                
-                div.innerHTML = `
-                    <span class="category-icon">${info.icon}</span>
-                    <span>${info.nameKo}</span>
-                `;
-                
-                div.onclick = () => selectCategory(category, 'emoji');
-                emojiDropdown.appendChild(div);
-            });
-            
-            // 특수기호 드롭다운
-            const symbolCategories = getUniqueCategories(allSymbols);
-            const symbolDropdown = document.getElementById('symbolDropdown');
-            symbolDropdown.innerHTML = '';
-            
-            symbolCategories.forEach(category => {
-                const div = document.createElement('div');
-                div.className = 'dropdown-item';
-                
-                // 카테고리의 첫 번째 기호를 아이콘으로 사용
-                const categorySymbols = allSymbols.filter(s => s.category === category);
-                const icon = symbolCategoryIcons[category] || (categorySymbols[0] ? categorySymbols[0].symbol : '◆');
-                
-                div.innerHTML = `
-                    <span class="category-icon">${icon}</span>
-                    <span>${category}</span>
-                `;
                 
                 div.onclick = () => selectCategory(category, 'symbol');
                 symbolDropdown.appendChild(div);
