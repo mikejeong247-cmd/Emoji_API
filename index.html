@@ -3,7 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>이모지 모음</title>
+    <title>이모지 & 텍스트 도구 모음</title>
+    <!-- QR 코드 라이브러리 CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -97,7 +99,7 @@
 
         .button-container {
             display: flex;
-            gap: 20px;
+            gap: 15px;
             justify-content: center;
             flex-wrap: wrap;
         }
@@ -111,16 +113,16 @@
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             border: none;
-            padding: 15px 30px;
+            padding: 15px 25px;
             border-radius: 25px;
             cursor: pointer;
-            font-size: 1.1rem;
+            font-size: 1rem;
             font-weight: 500;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
             transition: all 0.3s ease;
-            min-width: 150px;
+            min-width: 140px;
             justify-content: center;
         }
 
@@ -231,6 +233,180 @@
             font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", "Android Emoji", sans-serif;
         }
 
+        /* 도구 섹션 스타일 */
+        .tool-section {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            margin-bottom: 30px;
+            display: none;
+        }
+
+        .tool-container {
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        .tool-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .tool-header h3 {
+            font-size: 1.5rem;
+            color: #333;
+            margin: 0;
+        }
+
+        .close-tool {
+            background: #ff4757;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        .close-tool:hover {
+            background: #ff3742;
+        }
+
+        .text-input-area {
+            width: 100%;
+            min-height: 150px;
+            padding: 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-family: inherit;
+            resize: vertical;
+        }
+
+        .tool-buttons {
+            display: flex;
+            gap: 10px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        .tool-btn {
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+        }
+
+        .tool-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .text-output {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            min-height: 100px;
+            font-size: 1rem;
+            line-height: 1.6;
+            word-wrap: break-word;
+        }
+
+        .count-display {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .count-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .count-label {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .count-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        /* QR 코드 섹션 */
+        .qr-input-section {
+            margin-bottom: 20px;
+        }
+
+        .qr-input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            font-size: 1rem;
+            margin-bottom: 15px;
+        }
+
+        #qrcode {
+            display: flex;
+            justify-content: center;
+            margin: 20px 0;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+        }
+
+        /* 단축키 테이블 */
+        .shortcut-table {
+            width: 100%;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 20px;
+        }
+
+        .shortcut-table th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: 500;
+        }
+
+        .shortcut-table td {
+            padding: 12px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .shortcut-table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .shortcut-key {
+            display: inline-block;
+            padding: 3px 8px;
+            background: #e9ecef;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 0.9rem;
+            margin: 0 2px;
+        }
+
         .load-more-container {
             text-align: center;
             margin: 20px 0;
@@ -333,7 +509,7 @@
     <div class="clipboard-section">
         <div class="clipboard-container">
             <div class="clipboard-header">
-                <h3>🎨 이모지 모음</h3>
+                <h3>🎨 도구 모음</h3>
                 <button class="clear-btn" onclick="clearClipboard()">지우기</button>
             </div>
             <div id="clipboard">
@@ -362,11 +538,120 @@
                     </button>
                     <div class="dropdown-menu" id="symbolDropdown"></div>
                 </div>
+
+                <!-- 단축키 드롭다운 -->
+                <div class="dropdown-wrapper">
+                    <button class="category-button" id="shortcutButton" onclick="toggleDropdown('shortcut')">
+                        <span>⌨️ 단축키</span>
+                        <span class="dropdown-arrow">▼</span>
+                    </button>
+                    <div class="dropdown-menu" id="shortcutDropdown">
+                        <div class="dropdown-item" onclick="selectShortcut('windows')">
+                            <span class="category-icon">🪟</span>
+                            <span>Windows</span>
+                        </div>
+                        <div class="dropdown-item" onclick="selectShortcut('mac')">
+                            <span class="category-icon">🍎</span>
+                            <span>Mac</span>
+                        </div>
+                        <div class="dropdown-item" onclick="selectShortcut('vscode')">
+                            <span class="category-icon">📝</span>
+                            <span>VS Code</span>
+                        </div>
+                        <div class="dropdown-item" onclick="selectShortcut('excel')">
+                            <span class="category-icon">📊</span>
+                            <span>Excel</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 텍스트 도구 버튼 -->
+                <button class="category-button" onclick="openTextTools()">
+                    <span>📝 텍스트도구</span>
+                </button>
+
+                <!-- QR 생성기 버튼 -->
+                <button class="category-button" onclick="openQRGenerator()">
+                    <span>📱 QR생성</span>
+                </button>
             </div>
         </div>
 
+        <!-- 이모지/특수기호 그리드 -->
         <div id="emojiGrid" class="emoji-grid">
             <div class="loading">데이터를 불러오는 중...</div>
+        </div>
+
+        <!-- 텍스트 도구 섹션 -->
+        <div id="textToolsSection" class="tool-section">
+            <div class="tool-container">
+                <div class="tool-header">
+                    <h3>📝 텍스트 도구</h3>
+                    <button class="close-tool" onclick="closeTextTools()">닫기</button>
+                </div>
+                
+                <textarea id="textInput" class="text-input-area" placeholder="텍스트를 입력하세요..."></textarea>
+                
+                <div class="tool-buttons">
+                    <button class="tool-btn" onclick="reverseText()">↔️ 거꾸로</button>
+                    <button class="tool-btn" onclick="mirrorText()">🪞 거울반전</button>
+                    <button class="tool-btn" onclick="countText()">🔢 글자수</button>
+                    <button class="tool-btn" onclick="toUpperCase()">🔠 대문자</button>
+                    <button class="tool-btn" onclick="toLowerCase()">🔡 소문자</button>
+                </div>
+                
+                <div id="textOutput" class="text-output" style="display: none;"></div>
+                
+                <div id="countDisplay" class="count-display" style="display: none;">
+                    <div class="count-item">
+                        <div class="count-label">전체 글자수</div>
+                        <div class="count-value" id="totalCount">0</div>
+                    </div>
+                    <div class="count-item">
+                        <div class="count-label">공백 제외</div>
+                        <div class="count-value" id="noSpaceCount">0</div>
+                    </div>
+                    <div class="count-item">
+                        <div class="count-label">단어 수</div>
+                        <div class="count-value" id="wordCount">0</div>
+                    </div>
+                    <div class="count-item">
+                        <div class="count-label">중복 제외 단어</div>
+                        <div class="count-value" id="uniqueWordCount">0</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- QR 생성기 섹션 -->
+        <div id="qrSection" class="tool-section">
+            <div class="tool-container">
+                <div class="tool-header">
+                    <h3>📱 QR 코드 생성기</h3>
+                    <button class="close-tool" onclick="closeQRGenerator()">닫기</button>
+                </div>
+                
+                <div class="qr-input-section">
+                    <input type="text" id="qrInput" class="qr-input" placeholder="URL 또는 텍스트를 입력하세요..." />
+                    <button class="tool-btn" onclick="generateQR()">QR 코드 생성</button>
+                </div>
+                
+                <div id="qrcode"></div>
+            </div>
+        </div>
+
+        <!-- 단축키 섹션 -->
+        <div id="shortcutSection" class="tool-section">
+            <div class="tool-container">
+                <div class="tool-header">
+                    <h3 id="shortcutTitle">⌨️ 단축키 모음</h3>
+                    <button class="close-tool" onclick="closeShortcuts()">닫기</button>
+                </div>
+                
+                <table class="shortcut-table" id="shortcutTable">
+                    <!-- 단축키 내용이 여기에 동적으로 추가됨 -->
+                </table>
+            </div>
         </div>
 
         <div class="load-more-container" id="loadMoreContainer" style="display: none;">
@@ -378,7 +663,7 @@
 
     <footer class="footer">
         <div class="footer-content">
-            <p>© 2024 이모지 모음. 모든 이모지는 유니코드 표준을 따릅니다.</p>
+            <p>© 2024 도구 모음. 모든 이모지는 유니코드 표준을 따릅니다.</p>
             <p style="margin-top: 15px; font-size: 0.8rem; color: #999;">
                 이 웹사이트는 교육 및 개인 사용 목적으로 제작되었습니다.
             </p>
@@ -396,6 +681,7 @@
         let displayedCount = 0;
         let currentType = '';
         let currentCategory = '';
+        let qrCodeInstance = null;
         const ITEMS_PER_PAGE = 70;
 
         // 카테고리별 대표 이모지와 한국어명
@@ -428,6 +714,68 @@
             'Miscellaneous Symbols': { icon: '☺', nameKo: '기타기호' },
             'Miscellaneous Technical': { icon: '⌘', nameKo: '기술기호' },
             'Number Forms': { icon: '½', nameKo: '숫자형태' }
+        };
+
+        // 거울 반전용 매핑
+        const mirrorMap = {
+            'a': 'ɐ', 'b': 'q', 'c': 'ɔ', 'd': 'p', 'e': 'ǝ', 'f': 'ɟ', 'g': 'ƃ', 'h': 'ɥ',
+            'i': 'ı', 'j': 'ɾ', 'k': 'ʞ', 'l': 'l', 'm': 'ɯ', 'n': 'u', 'o': 'o', 'p': 'd',
+            'q': 'b', 'r': 'ɹ', 's': 's', 't': 'ʇ', 'u': 'n', 'v': 'ʌ', 'w': 'ʍ', 'x': 'x',
+            'y': 'ʎ', 'z': 'z',
+            'A': '∀', 'B': 'ᙠ', 'C': 'Ɔ', 'D': 'ᗡ', 'E': 'Ǝ', 'F': 'Ⅎ', 'G': '⅁', 'H': 'H',
+            'I': 'I', 'J': 'ſ', 'K': 'ꓘ', 'L': '˥', 'M': 'W', 'N': 'N', 'O': 'O', 'P': 'Ԁ',
+            'Q': 'Ό', 'R': 'ᴚ', 'S': 'S', 'T': '⊥', 'U': '∩', 'V': 'Λ', 'W': 'M', 'X': 'X',
+            'Y': '⅄', 'Z': 'Z',
+            '1': 'Ɩ', '2': 'ᄅ', '3': 'Ɛ', '4': 'ㄣ', '5': 'ϛ', '6': '9', '7': 'ㄱ', '8': '8',
+            '9': '6', '0': '0'
+        };
+
+        // 단축키 데이터
+        const shortcutData = {
+            'windows': [
+                { action: '복사', keys: ['Ctrl', 'C'] },
+                { action: '붙여넣기', keys: ['Ctrl', 'V'] },
+                { action: '잘라내기', keys: ['Ctrl', 'X'] },
+                { action: '실행 취소', keys: ['Ctrl', 'Z'] },
+                { action: '다시 실행', keys: ['Ctrl', 'Y'] },
+                { action: '모두 선택', keys: ['Ctrl', 'A'] },
+                { action: '찾기', keys: ['Ctrl', 'F'] },
+                { action: '저장', keys: ['Ctrl', 'S'] },
+                { action: '새 파일', keys: ['Ctrl', 'N'] },
+                { action: '창 전환', keys: ['Alt', 'Tab'] }
+            ],
+            'mac': [
+                { action: '복사', keys: ['⌘', 'C'] },
+                { action: '붙여넣기', keys: ['⌘', 'V'] },
+                { action: '잘라내기', keys: ['⌘', 'X'] },
+                { action: '실행 취소', keys: ['⌘', 'Z'] },
+                { action: '다시 실행', keys: ['⌘', 'Shift', 'Z'] },
+                { action: '모두 선택', keys: ['⌘', 'A'] },
+                { action: '찾기', keys: ['⌘', 'F'] },
+                { action: '저장', keys: ['⌘', 'S'] },
+                { action: '새 파일', keys: ['⌘', 'N'] },
+                { action: '앱 전환', keys: ['⌘', 'Tab'] }
+            ],
+            'vscode': [
+                { action: '명령 팔레트', keys: ['Ctrl/⌘', 'Shift', 'P'] },
+                { action: '파일 열기', keys: ['Ctrl/⌘', 'O'] },
+                { action: '터미널 토글', keys: ['Ctrl/⌘', '`'] },
+                { action: '주석 토글', keys: ['Ctrl/⌘', '/'] },
+                { action: '다중 커서', keys: ['Alt/⌥', 'Click'] },
+                { action: '줄 복사', keys: ['Alt/⌥', 'Shift', '↓'] },
+                { action: '줄 이동', keys: ['Alt/⌥', '↓'] },
+                { action: '파일 검색', keys: ['Ctrl/⌘', 'P'] }
+            ],
+            'excel': [
+                { action: '셀 편집', keys: ['F2'] },
+                { action: '절대참조 전환', keys: ['F4'] },
+                { action: '시트 이동', keys: ['Ctrl', 'Page Up/Down'] },
+                { action: '열 전체 선택', keys: ['Ctrl', 'Space'] },
+                { action: '행 전체 선택', keys: ['Shift', 'Space'] },
+                { action: '서식 복사', keys: ['Ctrl', 'Shift', 'C'] },
+                { action: '값만 붙여넣기', keys: ['Ctrl', 'Alt', 'V'] },
+                { action: '필터 적용', keys: ['Ctrl', 'Shift', 'L'] }
+            ]
         };
 
         // 유니코드 변환
@@ -554,7 +902,7 @@
             });
         }
 
-        // 특수기호 데이터 로드 - JSON 형식 사용
+        // 특수기호 데이터 로드
         function loadSymbols() {
             console.log('특수기호 데이터 로드 시작');
             
@@ -563,7 +911,6 @@
             fetch(url)
             .then(response => response.text())
             .then(text => {
-                // Google Sheets JSON 응답 파싱
                 const jsonString = text.substring(47, text.length - 2);
                 const data = JSON.parse(jsonString);
                 
@@ -574,9 +921,7 @@
                 rows.forEach(row => {
                     if (row.c && row.c.length >= 3) {
                         const category = row.c[0] ? (row.c[0].v || '') : '';
-                        // C열(index 2)에서 실제 문자 가져오기 (B열이 아닌)
                         const symbol = row.c[2] ? (row.c[2].v || '') : '';
-                        // 한글 이름은 E열이나 다른 열에 있을 수 있음
                         const nameKo = row.c[4] ? (row.c[4].v || '') : '';
                         
                         if (symbol && category) {
@@ -591,15 +936,11 @@
                 
                 console.log('총 ' + allSymbols.length + '개 특수기호 로드 완료');
                 
-                // 드롭다운 메뉴 생성
                 createDropdownMenus();
-                
-                // 첫 번째 카테고리(Smileys & Emotion) 자동 선택
                 selectCategory('Smileys & Emotion', 'emoji');
             })
             .catch(error => {
                 console.error('특수기호 로드 오류:', error);
-                // 특수기호 로드 실패해도 이모지는 동작하도록
                 createDropdownMenus();
                 selectCategory('Smileys & Emotion', 'emoji');
             });
@@ -642,7 +983,6 @@
                 const div = document.createElement('div');
                 div.className = 'dropdown-item';
                 
-                // 카테고리 정보 가져오기 (한글명과 아이콘)
                 const info = symbolCategoryInfo[category];
                 if (info) {
                     div.innerHTML = `
@@ -650,7 +990,6 @@
                         <span>${info.nameKo}</span>
                     `;
                 } else {
-                    // 정의되지 않은 카테고리는 첫 번째 기호를 아이콘으로 사용
                     const categorySymbols = allSymbols.filter(s => s.category === category);
                     const icon = categorySymbols[0] ? categorySymbols[0].symbol : '◆';
                     div.innerHTML = `
@@ -668,15 +1007,15 @@
         function toggleDropdown(type) {
             const dropdown = document.getElementById(type + 'Dropdown');
             const button = document.getElementById(type + 'Button');
-            const otherType = type === 'emoji' ? 'symbol' : 'emoji';
-            const otherDropdown = document.getElementById(otherType + 'Dropdown');
-            const otherButton = document.getElementById(otherType + 'Button');
             
-            // 다른 드롭다운 닫기
-            otherDropdown.classList.remove('show');
-            otherButton.classList.remove('open');
+            // 모든 드롭다운 닫기
+            ['emoji', 'symbol', 'shortcut'].forEach(t => {
+                if (t !== type) {
+                    document.getElementById(t + 'Dropdown').classList.remove('show');
+                    document.getElementById(t + 'Button').classList.remove('open');
+                }
+            });
             
-            // 현재 드롭다운 토글
             dropdown.classList.toggle('show');
             button.classList.toggle('open');
         }
@@ -687,15 +1026,20 @@
             currentType = type;
             
             // 모든 드롭다운 닫기
-            document.getElementById('emojiDropdown').classList.remove('show');
-            document.getElementById('symbolDropdown').classList.remove('show');
-            document.getElementById('emojiButton').classList.remove('open');
-            document.getElementById('symbolButton').classList.remove('open');
+            ['emoji', 'symbol', 'shortcut'].forEach(t => {
+                document.getElementById(t + 'Dropdown').classList.remove('show');
+                document.getElementById(t + 'Button').classList.remove('open');
+            });
+            
+            // 모든 도구 섹션 숨기기
+            hideAllSections();
+            document.getElementById('emojiGrid').style.display = 'grid';
             
             // 활성 버튼 표시
+            document.querySelectorAll('.category-button').forEach(btn => btn.classList.remove('active'));
+            
             if (type === 'emoji') {
                 document.getElementById('emojiButton').classList.add('active');
-                document.getElementById('symbolButton').classList.remove('active');
                 
                 filteredItems = allEmojis
                     .filter(item => item.category === category)
@@ -706,7 +1050,6 @@
                     }));
             } else {
                 document.getElementById('symbolButton').classList.add('active');
-                document.getElementById('emojiButton').classList.remove('active');
                 
                 filteredItems = allSymbols
                     .filter(item => item.category === category)
@@ -834,13 +1177,185 @@
             }, 1500);
         }
 
+        // 모든 섹션 숨기기
+        function hideAllSections() {
+            document.getElementById('emojiGrid').style.display = 'none';
+            document.getElementById('textToolsSection').style.display = 'none';
+            document.getElementById('qrSection').style.display = 'none';
+            document.getElementById('shortcutSection').style.display = 'none';
+            document.getElementById('loadMoreContainer').style.display = 'none';
+        }
+
+        // 텍스트 도구 열기
+        function openTextTools() {
+            hideAllSections();
+            document.getElementById('textToolsSection').style.display = 'block';
+            document.querySelectorAll('.category-button').forEach(btn => btn.classList.remove('active'));
+        }
+
+        function closeTextTools() {
+            document.getElementById('textToolsSection').style.display = 'none';
+            document.getElementById('emojiGrid').style.display = 'grid';
+            
+            // 이전 선택 복원
+            if (currentCategory && currentType) {
+                selectCategory(currentCategory, currentType);
+            }
+        }
+
+        // 텍스트 도구 함수들
+        function reverseText() {
+            const input = document.getElementById('textInput').value;
+            const output = input.split('').reverse().join('');
+            document.getElementById('textOutput').style.display = 'block';
+            document.getElementById('textOutput').textContent = output;
+            document.getElementById('countDisplay').style.display = 'none';
+        }
+
+        function mirrorText() {
+            const input = document.getElementById('textInput').value;
+            let output = '';
+            
+            for (let char of input) {
+                output = (mirrorMap[char] || char) + output;
+            }
+            
+            document.getElementById('textOutput').style.display = 'block';
+            document.getElementById('textOutput').textContent = output;
+            document.getElementById('countDisplay').style.display = 'none';
+        }
+
+        function countText() {
+            const input = document.getElementById('textInput').value;
+            
+            // 전체 글자수
+            const total = input.length;
+            
+            // 공백 제외
+            const noSpace = input.replace(/\s/g, '').length;
+            
+            // 단어 수
+            const words = input.trim().split(/\s+/).filter(w => w.length > 0);
+            const wordCount = words.length;
+            
+            // 중복 제외 단어 (조사 제거)
+            const particles = /[은는이가을를에서도만의와과]$/;
+            const uniqueWords = new Set(
+                words.map(word => word.replace(particles, ''))
+            );
+            
+            document.getElementById('totalCount').textContent = total;
+            document.getElementById('noSpaceCount').textContent = noSpace;
+            document.getElementById('wordCount').textContent = wordCount;
+            document.getElementById('uniqueWordCount').textContent = uniqueWords.size;
+            
+            document.getElementById('textOutput').style.display = 'none';
+            document.getElementById('countDisplay').style.display = 'grid';
+        }
+
+        function toUpperCase() {
+            const input = document.getElementById('textInput').value;
+            document.getElementById('textInput').value = input.toUpperCase();
+        }
+
+        function toLowerCase() {
+            const input = document.getElementById('textInput').value;
+            document.getElementById('textInput').value = input.toLowerCase();
+        }
+
+        // QR 생성기
+        function openQRGenerator() {
+            hideAllSections();
+            document.getElementById('qrSection').style.display = 'block';
+            document.querySelectorAll('.category-button').forEach(btn => btn.classList.remove('active'));
+        }
+
+        function closeQRGenerator() {
+            document.getElementById('qrSection').style.display = 'none';
+            document.getElementById('emojiGrid').style.display = 'grid';
+            
+            if (currentCategory && currentType) {
+                selectCategory(currentCategory, currentType);
+            }
+        }
+
+        function generateQR() {
+            const input = document.getElementById('qrInput').value;
+            
+            if (!input) {
+                showToast('텍스트를 입력해주세요');
+                return;
+            }
+            
+            const qrcodeDiv = document.getElementById('qrcode');
+            qrcodeDiv.innerHTML = '';
+            
+            new QRCode(qrcodeDiv, {
+                text: input,
+                width: 256,
+                height: 256,
+                colorDark: '#000000',
+                colorLight: '#ffffff',
+                correctLevel: QRCode.CorrectLevel.H
+            });
+            
+            showToast('QR 코드가 생성되었습니다');
+        }
+
+        // 단축키 표시
+        function selectShortcut(platform) {
+            hideAllSections();
+            document.getElementById('shortcutSection').style.display = 'block';
+            
+            // 드롭다운 닫기
+            document.getElementById('shortcutDropdown').classList.remove('show');
+            document.getElementById('shortcutButton').classList.remove('open');
+            
+            // 제목 업데이트
+            const titles = {
+                'windows': '🪟 Windows 단축키',
+                'mac': '🍎 Mac 단축키',
+                'vscode': '📝 VS Code 단축키',
+                'excel': '📊 Excel 단축키'
+            };
+            document.getElementById('shortcutTitle').textContent = titles[platform];
+            
+            // 테이블 생성
+            const table = document.getElementById('shortcutTable');
+            table.innerHTML = `
+                <thead>
+                    <tr>
+                        <th>기능</th>
+                        <th>단축키</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${shortcutData[platform].map(item => `
+                        <tr>
+                            <td>${item.action}</td>
+                            <td>${item.keys.map(key => `<span class="shortcut-key">${key}</span>`).join(' + ')}</td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            `;
+        }
+
+        function closeShortcuts() {
+            document.getElementById('shortcutSection').style.display = 'none';
+            document.getElementById('emojiGrid').style.display = 'grid';
+            
+            if (currentCategory && currentType) {
+                selectCategory(currentCategory, currentType);
+            }
+        }
+
         // 외부 클릭시 드롭다운 닫기
         document.addEventListener('click', (event) => {
-            if (!event.target.closest('.dropdown-wrapper')) {
-                document.getElementById('emojiDropdown').classList.remove('show');
-                document.getElementById('symbolDropdown').classList.remove('show');
-                document.getElementById('emojiButton').classList.remove('open');
-                document.getElementById('symbolButton').classList.remove('open');
+            if (!event.target.closest('.dropdown-wrapper') && !event.target.closest('.category-button')) {
+                ['emoji', 'symbol', 'shortcut'].forEach(type => {
+                    document.getElementById(type + 'Dropdown').classList.remove('show');
+                    document.getElementById(type + 'Button').classList.remove('open');
+                });
             }
         });
 
